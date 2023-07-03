@@ -7,25 +7,26 @@ import com.example.DecorEcommerceProject.Service.IProductService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/products")
 public class ProductsController {
     private final IProductService productService;
     public ProductsController(IProductService productService){
         this.productService = productService;
     }
-    @GetMapping("/products")
+    @GetMapping
     public ResponseEntity<?> getAllProducts() {
         if (productService.getAllProducts().size()==0){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List product is empty!");
         }
         return ResponseEntity.status(HttpStatus.OK).body(productService.getAllProducts());
     }
-    @GetMapping("/products/search")
+    @GetMapping("/search")
     public ResponseEntity<?> getAllProductsByKeyword(@RequestParam("keyword") String keyword) {
         if(productService.getAllProductsByKeyword(keyword).size() == 0){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List product is empty!");
@@ -41,7 +42,7 @@ public class ProductsController {
             return ResponseEntity.ok().body(productService.getProductByID(id));
         }
     }
-    @GetMapping("/products/category/{cateId}")
+    @GetMapping("/category/{cateId}")
     public ResponseEntity<?> getProductByCateID(@PathVariable Long cateId){
         if(productService.getAllProductByCategoryID(cateId) == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List products is empty!");
@@ -49,7 +50,7 @@ public class ProductsController {
             return ResponseEntity.ok().body(productService.getAllProductByCategoryID(cateId));
         }
     }
-    @GetMapping("/products/cateID-search")
+    @GetMapping("/cateID-search")
     public ResponseEntity<?> getProductsByCateIDAndKeyword(@RequestParam("cateID") Long cateID,
                                                        @RequestParam("keyword") String keyword){
         if(productService.getAllProductByCateIDAndKeyword(cateID, keyword) == null){
@@ -58,24 +59,30 @@ public class ProductsController {
             return ResponseEntity.ok().body(productService.getAllProductByCateIDAndKeyword(cateID, keyword));
         }
     }
-    @PostMapping("/products/add")
-        public ResponseEntity<?> createProduct(@RequestBody  ProductDto productDto){
+    @PostMapping
+        public ResponseEntity<?> createProduct(@ModelAttribute  ProductDto productDto,
+                                               @RequestParam("imageFile") MultipartFile mainImageMultipart,
+                                               @RequestParam("extraImages") List<MultipartFile> extraImagesMultipart
+                                                ){
         try {
-            Product newProduct = productService.createProduct(productDto);
-            return ResponseEntity.ok(newProduct);
+            Product newProduct = productService.createProduct(productDto, mainImageMultipart,extraImagesMultipart);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newProduct);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    @DeleteMapping("/products/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         return ResponseEntity.ok(productService.deleteProduct(id));
     }
-    @PutMapping("/products/save/{id}")
-    public ResponseEntity<?> updateBook(@PathVariable Long id, @RequestBody ProductDto productDto) {
+    @PutMapping("/save/{id}")
+    public ResponseEntity<?> updateBook(@PathVariable Long id,
+                                        @ModelAttribute  ProductDto productDto,
+                                        @RequestParam(value = "imageFile", required = false) MultipartFile mainImageFile,
+                                        @RequestParam(value = "extraImages", required = false) List<MultipartFile> extraImages) {
         try {
-            Product product = productService.updateProduct(id, productDto);
-            return ResponseEntity.ok(product);
+            Product updatedProduct = productService.updateProduct(id, productDto, mainImageFile, extraImages);
+            return ResponseEntity.ok(updatedProduct);
         } catch (Exception e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }

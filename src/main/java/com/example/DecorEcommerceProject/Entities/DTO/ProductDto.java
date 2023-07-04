@@ -17,5 +17,5 @@ public class ProductDto {
     private int inventory;
     @NotEmpty(message = "Thiếu giá cả")
     private double price;
-    private String imageUrl;
+    private String mainImage;
 }

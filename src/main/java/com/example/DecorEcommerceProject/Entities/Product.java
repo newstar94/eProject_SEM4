@@ -7,7 +7,6 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -33,6 +32,8 @@ public class Product {
 
     @Column(name = "unit_price")
     private double price;
+    @Column(name = "main_image", nullable = false)
+    private String mainImage;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
@@ -42,7 +43,7 @@ public class Product {
     @Column(name = "date_created", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "last_updated", nullable = false)
+    @Column(name = "last_updated")
     private LocalDateTime updatedAt;
 
     @JsonIgnore
@@ -53,7 +54,7 @@ public class Product {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "product")
     private List<OrderItem> orderItems;
 
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "product")
-    private List<ProductImage> productImages;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<ProductImage> images;
 }
 

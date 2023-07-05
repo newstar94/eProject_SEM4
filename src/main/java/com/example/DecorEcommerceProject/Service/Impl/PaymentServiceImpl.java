@@ -22,7 +22,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -57,6 +56,8 @@ public class PaymentServiceImpl implements IPaymentService {
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", PaymentConfig.vnp_ReturnUrl);
+        vnp_Params.put("vnp_OrderType", "other");
+        vnp_Params.put("vnp_IpAddr","1.1.1.1"); //fix cứng ip là 1.1.1.1 khi vào môi trường product lấy ip sau
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");

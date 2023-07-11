@@ -49,7 +49,7 @@ public class UserServiceImpl implements IUserService{
         }
         if (user != null && role != null) {
             if (user.getRoles().contains(role)) {
-                return "User " + phone + " has already have role " + roleName + " !";
+                return "Phone " + phone + " has already have role " + roleName + " !";
             }
             user.getRoles().add(role);
             return "Adding role " + roleName + " to " + phone + " successfully!";

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.Tuple;
 import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -20,16 +21,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             nativeQuery = true
     )
     List<Product> getAllProductsByKeyword(String keyword);
-//    @Query(
-//            value = "SELECT p.id, p.name, p.description, p.inventory, p.price, p.imageUrl, sum(c.quantity) " +
-//                    " from products p inner join order_item c on p.id = c.book_id " +
-//                    " inner join orders o on c.order_id = o.order_id " +
-//                    " where o.status = 'AVAILABLE' or o.status = 'COMPLETED' " +
-//                    " group by p.title " +
-//                    " order by sum(c.quantity) desc " +
-//                    " limit 0, :topNumber",
-//            nativeQuery = true
-//    )
-//    List<Tuple> getTop_Number_Product_Best_Seller(int topNumber);
+    @Query(
+            value = "SELECT p.id, p.name, p.description, p.inventory, p.price, p.mainImage, p.extraImages,p.status, p.category, sum(c.quantity) " +
+                    " from products p inner join order_items c on p.id = c.product_id " +
+                    " inner join orders o on c.order_id = o.id " +
+                    " where o.status = 'AVAILABLE'  " +
+                    " group by p.category " +
+                    " order by sum(c.quantity) desc " +
+                    " limit 0, :topNumber",
+            nativeQuery = true
+    )
+    List<Tuple> getTop_Number_Product_Best_Seller(int topNumber);
 
 }

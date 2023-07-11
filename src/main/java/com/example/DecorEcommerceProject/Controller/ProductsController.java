@@ -1,9 +1,13 @@
 package com.example.DecorEcommerceProject.Controller;
 
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
+import com.example.DecorEcommerceProject.Entities.DTO.ProductTopSellerDto;
 import com.example.DecorEcommerceProject.Entities.Product;
+import com.example.DecorEcommerceProject.Repositories.ProductRepository;
 import com.example.DecorEcommerceProject.Service.ICategoryService;
 import com.example.DecorEcommerceProject.Service.IProductService;
+import com.example.DecorEcommerceProject.Service.Impl.ProductServiceImpl;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +23,7 @@ public class ProductsController {
     public ProductsController(IProductService productService){
         this.productService = productService;
     }
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<?> getAllProducts() {
         if (productService.getAllProducts().size()==0){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List product is empty!");
@@ -87,4 +91,9 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
+//    @GetMapping("/top-best-seller")
+//    public ResponseEntity<List<ProductTopSellerDto>> getTopBestSeller(@RequestParam("topNumber") int topNumber) {
+//        List<ProductTopSellerDto> topSellers = productService.getTopSellerOfProduct(topNumber);
+//        return ResponseEntity.ok(topSellers);
+//    }
 }

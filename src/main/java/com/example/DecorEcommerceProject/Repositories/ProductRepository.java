@@ -22,11 +22,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     )
     List<Product> getAllProductsByKeyword(String keyword);
     @Query(
-            value = "SELECT p.id, p.name, p.description, p.inventory, p.price, p.mainImage, p.extraImages,p.status, p.category, sum(c.quantity) " +
+            value = "SELECT p.id, p.name, p.description, p.inventory, p.unit_price, p.main_image, p.extraImages,p.status, p.category_id, sum(c.quantity) " +
                     " from products p inner join order_items c on p.id = c.product_id " +
                     " inner join orders o on c.order_id = o.id " +
                     " where o.status = 'AVAILABLE'  " +
-                    " group by p.category " +
+                    " group by p.category_id " +
                     " order by sum(c.quantity) desc " +
                     " limit 0, :topNumber",
             nativeQuery = true

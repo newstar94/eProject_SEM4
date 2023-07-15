@@ -1,7 +1,11 @@
 package com.example.DecorEcommerceProject.Service;
 
+import com.example.DecorEcommerceProject.Entities.DTO.VoucherDTO;
 import com.example.DecorEcommerceProject.Entities.Voucher;
 
+import java.util.List;
+
 public interface IVoucherService {
-    Voucher createVoucher(Voucher voucher);
+    List<Voucher> getAllVoucher();
+    Voucher createVoucher(VoucherDTO voucherDTO) throws Exception;
 }

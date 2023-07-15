@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -32,7 +33,8 @@ public class PaymentServiceImpl implements IPaymentService {
         this.orderRepository = orderRepository;
     }
     @Override
-    public Object createPayment(Order order) throws Exception {
+    public Object createPayment(Long id) throws Exception {
+        Order order = orderRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Not found order with id: "+id));
         ResponseObject responseObject = new ResponseObject();
         if (order.getPaymentType() == PaymentType.COD) {
             responseObject.setStatus("");

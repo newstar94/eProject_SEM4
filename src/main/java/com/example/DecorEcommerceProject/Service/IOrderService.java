@@ -12,6 +12,8 @@ public interface IOrderService {
     Object createOrder(OrderDTO orderDTO) throws Exception;
     Order updateOrder(Long id, Order order) throws IOException;
     Order cancelOrder(Long id) throws IOException;
+    Order returnOrder(Long id);
+    Order finishOrder(Long id);
     Optional<Order> getOrderById(Long id);
     List<Order> getAllOrder();
     List<Order> getAllOrderByUseId(Long id);

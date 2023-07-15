@@ -48,6 +48,16 @@ public class OrderController {
         }
     }
 
+    @PostMapping("/checkout/{id}")
+    public ResponseEntity<?> checkOut(@PathVariable Long id) {
+        try {
+            Object order = paymentService.createPayment(id);
+            return ResponseEntity.ok(order);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/result")
     public ResponseEntity<?> result(
             @RequestParam(value = "vnp_TmnCode") String vnp_TmnCode,
@@ -97,6 +107,36 @@ public class OrderController {
                 return ResponseEntity.ok().body(updatedOrder);
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not cancel order with id: " + id);
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    @PutMapping("/return/{id}") //for user
+    public ResponseEntity<?> returnOrder(@PathVariable Long id) {
+        try {
+            Order updatedOrder = orderService.returnOrder(id);
+            if (updatedOrder != null) {
+                return ResponseEntity.ok().body(updatedOrder);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not return order with id: " + id);
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    @PutMapping("/finish/{id}") //for user
+    public ResponseEntity<?> finishOrder(@PathVariable Long id) {
+        try {
+            Order updatedOrder = orderService.finishOrder(id);
+            if (updatedOrder != null) {
+                return ResponseEntity.ok().body(updatedOrder);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not finish order with id: " + id);
             }
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

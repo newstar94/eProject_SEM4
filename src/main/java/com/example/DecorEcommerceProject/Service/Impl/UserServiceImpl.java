@@ -1,6 +1,7 @@
 package com.example.DecorEcommerceProject.Service.Impl;
 
 import com.example.DecorEcommerceProject.Entities.DTO.RegisterRequest;
+import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Entities.Role;
 import com.example.DecorEcommerceProject.Entities.Token.PasswordResetToken;
 import com.example.DecorEcommerceProject.Entities.User;
@@ -128,7 +129,6 @@ public class UserServiceImpl implements IUserService{
         user.setAddress(user.getAddress());
         userRepository.save(user);
         return user;
-
     }
 
     @Override
@@ -200,6 +200,8 @@ public class UserServiceImpl implements IUserService{
         user.setPhone(model.getPhone());
         user.setEmail(model.getEmail());
         user.setAddress(model.getAddress());
+        user.setPoint(0);
+        user.setLevel(Level.NEW);
         Role roles = roleRepository.findByName("USER");
         user.setRoles(Collections.singletonList(roles));
         return userRepository.save(user);

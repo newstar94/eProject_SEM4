@@ -32,9 +32,22 @@ public class VoucherServiceImpl implements IVoucherService {
     }
 
     @Override
+    public boolean checkVoucherIsUsed(String voucherCode, String username) {
+        Voucher voucher = voucherRepository.findByCode(voucherCode);
+        User user = userRepository.findByUsername(username);
+        if (voucher != null && user != null) {
+            VoucherUser voucherUser = voucherUserRepository.findVoucherUserByUserIdAndVoucherId(user.getId(), voucher.getId());
+            if (voucherUser!=null){
+                return voucherUser.isUsed();
+            }
+        }
+        return false;
+    }
+
+    @Override
     @Transactional
     public Voucher createVoucher(VoucherDTO voucherDTO) throws Exception {
-        if (voucherDTO.getUsers().isEmpty() && voucherDTO.getVoucher().getLevel() == null) {
+        if (voucherDTO.getUsers().isEmpty() && voucherDTO.getLevel() == null) {
             throw new Exception("Can not create voucher");
         }
         Voucher createdVoucher = voucherRepository.save(voucherDTO.getVoucher());
@@ -42,8 +55,8 @@ public class VoucherServiceImpl implements IVoucherService {
     }
 
     private Voucher saveVoucherUser(VoucherDTO voucherDTO, Voucher voucher) {
-        if (voucher.getLevel() != null||!voucherDTO.getUsers().isEmpty()) {
-            List<User> userList = userRepository.findByLevel(voucher.getLevel());
+        if (voucherDTO.getLevel() != null || !voucherDTO.getUsers().isEmpty()) {
+            List<User> userList = userRepository.findByLevel(voucherDTO.getLevel());
             List<User> users = voucherDTO.getUsers();
             for (User user : users) {
                 if (!userList.contains(user)) {

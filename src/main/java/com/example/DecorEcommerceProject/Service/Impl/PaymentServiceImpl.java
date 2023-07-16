@@ -1,11 +1,13 @@
 package com.example.DecorEcommerceProject.Service.Impl;
 
 import com.example.DecorEcommerceProject.Config.PaymentConfig;
+import com.example.DecorEcommerceProject.Entities.AdminConfig;
 import com.example.DecorEcommerceProject.Entities.Order;
 import com.example.DecorEcommerceProject.Entities.User;
 import com.example.DecorEcommerceProject.Entities.DTO.PaymentResultsDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.OrderStatus;
 import com.example.DecorEcommerceProject.Entities.Enum.PaymentType;
+import com.example.DecorEcommerceProject.Repositories.AdminConfigRepository;
 import com.example.DecorEcommerceProject.Repositories.OrderRepository;
 import com.example.DecorEcommerceProject.ResponseAPI.ResponseObject;
 import com.example.DecorEcommerceProject.Service.IPaymentService;
@@ -29,13 +31,18 @@ import java.util.*;
 @Service
 public class PaymentServiceImpl implements IPaymentService {
     private final OrderRepository orderRepository;
-    public PaymentServiceImpl(OrderRepository orderRepository) {
+    private final AdminConfigRepository adminConfigRepository;
+
+    public PaymentServiceImpl(OrderRepository orderRepository, AdminConfigRepository adminConfigRepository) {
         this.orderRepository = orderRepository;
+        this.adminConfigRepository = adminConfigRepository;
     }
+
     @Override
     public Object createPayment(Long id) throws Exception {
-        Order order = orderRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Not found order with id: "+id));
+        Order order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         ResponseObject responseObject = new ResponseObject();
+        AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
         if (order.getPaymentType() == PaymentType.COD) {
             responseObject.setStatus("");
             responseObject.setMessage("");
@@ -44,9 +51,9 @@ public class PaymentServiceImpl implements IPaymentService {
         }
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
-        long amount = (long) (order.getAmount() * 100L);
+        long amount = order.getTotal() * 100L;
         String vnp_TxnRef = String.valueOf(order.getId());
-        String vnp_TmnCode = PaymentConfig.vnp_TmnCode;
+        String vnp_TmnCode = adminConfig.getVnp_TmnCode();
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -57,9 +64,9 @@ public class PaymentServiceImpl implements IPaymentService {
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", PaymentConfig.vnp_ReturnUrl);
+        vnp_Params.put("vnp_ReturnUrl", adminConfig.getVnp_ReturnUrl());
         vnp_Params.put("vnp_OrderType", "other");
-        vnp_Params.put("vnp_IpAddr","1.1.1.1"); //fix cứng ip là 1.1.1.1 khi vào môi trường product lấy ip sau
+        vnp_Params.put("vnp_IpAddr", "1.1.1.1"); //fix cứng ip là 1.1.1.1 khi vào môi trường product lấy ip sau
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -95,14 +102,15 @@ public class PaymentServiceImpl implements IPaymentService {
             }
         }
         String queryUrl = query.toString();
-        String vnp_SecureHash = PaymentConfig.hmacSHA512(PaymentConfig.vnp_HashSecret, hashData.toString());
+        String vnp_SecureHash = PaymentConfig.hmacSHA512(adminConfig.getVnp_HashSecret(), hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        String paymentUrl = PaymentConfig.vnp_PayUrl + "?" + queryUrl;
+        String paymentUrl = adminConfig.getVnp_PayUrl() + "?" + queryUrl;
         responseObject.setStatus("");
         responseObject.setMessage(paymentUrl);
         responseObject.setData(order);
         return responseObject;
     }
+
     @Override
     public Object getResult(String vnp_TmnCode,
                             String vnp_Amount,
@@ -129,7 +137,7 @@ public class PaymentServiceImpl implements IPaymentService {
         fields.put("vnp_TransactionStatus", URLEncoder.encode(vnp_TransactionStatus, StandardCharsets.US_ASCII.toString()));
         fields.put("vnp_TxnRef", URLEncoder.encode(vnp_TxnRef, StandardCharsets.US_ASCII.toString()));
 
-        String signValue = PaymentConfig.hashAllFields(fields);
+        String signValue = PaymentConfig.hashAllFields(fields, adminConfigRepository.findFirstByOrderByIdAsc().getVnp_HashSecret());
         ResponseObject responseObject = new ResponseObject();
         Order order = orderRepository.findById(Long.valueOf(vnp_TxnRef)).get();
         PaymentResultsDTO paymentResultsDTO = new PaymentResultsDTO();
@@ -150,7 +158,7 @@ public class PaymentServiceImpl implements IPaymentService {
                 responseObject.setStatus("Ok");
                 responseObject.setMessage("Payment Success");
                 responseObject.setData(paymentResultsDTO);
-            }else {
+            } else {
                 paymentResultsDTO.setOrder(order);
                 responseObject.setStatus("Error");
                 responseObject.setMessage("Error");
@@ -163,12 +171,14 @@ public class PaymentServiceImpl implements IPaymentService {
         responseObject.setData(null);
         return responseObject;
     }
+
     @Override
     public boolean refund(Order order) throws IOException {
+        AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
         String vnp_RequestId = PaymentConfig.getRandomNumber(8);
         String vnp_Version = "2.1.0";
         String vnp_Command = "refund";
-        String vnp_TmnCode = PaymentConfig.vnp_TmnCode;
+        String vnp_TmnCode = adminConfig.getVnp_TmnCode();
         String vnp_TransactionType = "02"; // trả toàn bộ tiền
         String vnp_TxnRef = String.valueOf(order.getId());
         long amount = (long) (order.getAmount() * 100);
@@ -183,7 +193,7 @@ public class PaymentServiceImpl implements IPaymentService {
         String vnp_CreateBy;
         if (user == null) {
             vnp_CreateBy = "admin";
-        }else {
+        } else {
             vnp_CreateBy = user.getUsername();
         }
 
@@ -215,11 +225,11 @@ public class PaymentServiceImpl implements IPaymentService {
                 vnp_TransactionType + "|" + vnp_TxnRef + "|" + vnp_Amount + "|" + vnp_TransactionNo + "|"
                 + vnp_TransactionDate + "|" + vnp_CreateBy + "|" + vnp_CreateDate + "|" + vnp_IpAddr + "|" + vnp_OrderInfo;
 
-        String vnp_SecureHash = PaymentConfig.hmacSHA512(PaymentConfig.vnp_HashSecret, hash_Data.toString());
+        String vnp_SecureHash = PaymentConfig.hmacSHA512(adminConfig.getVnp_HashSecret(), hash_Data.toString());
 
         vnp_Params.addProperty("vnp_SecureHash", vnp_SecureHash);
 
-        URL url = new URL(PaymentConfig.vnp_apiUrl);
+        URL url = new URL(adminConfig.getVnp_apiUrl());
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
@@ -241,7 +251,7 @@ public class PaymentServiceImpl implements IPaymentService {
 // Parse the string into a JSON object using Gson
         Gson gson = new Gson();
         JsonObject jsonObject = gson.fromJson(responseString, JsonObject.class);
-        String vnp_ResponseCode=jsonObject.get("vnp_ResponseCode").getAsString();
+        String vnp_ResponseCode = jsonObject.get("vnp_ResponseCode").getAsString();
         return vnp_ResponseCode.equals("00");
     }
 }

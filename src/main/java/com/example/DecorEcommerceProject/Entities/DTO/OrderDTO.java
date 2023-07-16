@@ -10,7 +10,7 @@ import com.example.DecorEcommerceProject.Entities.Enum.PaymentType;
 @Data
 public class OrderDTO {
     private PaymentType paymentType;
-    private Voucher voucher;
+    private String voucherCode;
     private ShippingAddress shippingAddress;
     private User user;
     private List<OrderItemDTO> orderItemDTOS;

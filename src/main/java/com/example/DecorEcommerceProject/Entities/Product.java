@@ -46,6 +46,12 @@ public class Product {
     @Column(name = "last_updated")
     private LocalDateTime updatedAt;
 
+    @Column
+    private int weight; //đơn vị gram
+
+    @Column
+    private boolean deliveryAvailable;
+
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "product")
     private List<DiscountHistory> discountHistories;

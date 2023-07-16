@@ -38,9 +38,6 @@ public class Voucher {
     @Column(name = "amount_max", nullable = false)
     private int amountMax;
 
-    @Column
-    private Level level;
-
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "voucher")
     private List<VoucherUser> voucherUsers;

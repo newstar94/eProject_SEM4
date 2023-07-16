@@ -8,4 +8,5 @@ import java.util.List;
 public interface IVoucherService {
     List<Voucher> getAllVoucher();
     Voucher createVoucher(VoucherDTO voucherDTO) throws Exception;
+    boolean checkVoucherIsUsed(String voucherCode, String username);
 }

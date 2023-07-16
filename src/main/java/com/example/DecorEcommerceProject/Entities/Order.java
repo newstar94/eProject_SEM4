@@ -42,10 +42,27 @@ public class Order {
     @JoinColumn(name = "shipping_address_id")
     private ShippingAddress shippingAddress;
 
+    @Column
+    private String ghnCode;
+
+    @Column
+    private String receiverInfo;
+
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @Column
     private PaymentType paymentType;
 
+    @Column
     private double amount;
+
+    @Column
+    private int voucher_discount;
+
+    @Column(name = "delivery_fee", nullable = false)
+    private int deliveryFee;
+
+    @Column
+    private int total;
 }

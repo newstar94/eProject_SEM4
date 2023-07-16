@@ -24,13 +24,22 @@ public class VoucherController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(voucherService.getAllVoucher());
     }
+    @GetMapping("/voucher/check")
+    public ResponseEntity<?> checkVoucherIsUsed(
+            @RequestParam("voucherCode") String voucherCode,
+            @RequestParam("username") String username) {
+        if (voucherService.checkVoucherIsUsed(voucherCode, username)){
+            return ResponseEntity.status(HttpStatus.OK).body("Áp mã voucher thành công");
+        }
+            return ResponseEntity.status(HttpStatus.OK).body("Voucher không hợp lệ!");
+    }
 
     @PostMapping("voucher/create")
-    public ResponseEntity<?> createVoucher(@Validated @RequestBody VoucherDTO voucherDTO){
+    public ResponseEntity<?> createVoucher(@Validated @RequestBody VoucherDTO voucherDTO) {
         try {
             Voucher voucher = voucherService.createVoucher(voucherDTO);
             return ResponseEntity.ok(voucher);
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }

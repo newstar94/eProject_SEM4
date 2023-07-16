@@ -48,7 +48,23 @@ public class OrderController {
         }
     }
 
-    @PostMapping("/checkout/{id}")
+    @PutMapping("/confirm/{id}") //for admin
+    public ResponseEntity<?> confirmOrder(@PathVariable Long id) {
+        try {
+            Order updatedOrder = orderService.confirmOrder(id);
+            if (updatedOrder != null) {
+                return ResponseEntity.ok().body(updatedOrder);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not confirm order with id: " + id);
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/checkout/{id}")
     public ResponseEntity<?> checkOut(@PathVariable Long id) {
         try {
             Object order = paymentService.createPayment(id);
@@ -84,14 +100,14 @@ public class OrderController {
             return ResponseEntity.ok().body(orderService.getOrderById(id));
         }
     }
-    @PutMapping("/update/{id}") //for admin
-    public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody Order order) {
+    @PutMapping("/delivering/{id}") //for admin
+    public ResponseEntity<?> deliveringOrder(@PathVariable Long id) {
         try {
-            Order updatedOrder = orderService.updateOrder(id, order);
+            Order updatedOrder = orderService.deliveringOrder(id);
             if (updatedOrder != null) {
                 return ResponseEntity.ok().body(updatedOrder);
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not update order with id: " + id);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not delivering order with id: " + id);
             }
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

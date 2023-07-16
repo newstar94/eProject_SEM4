@@ -17,5 +17,9 @@ public class ProductDto {
     private int inventory;
     @NotEmpty(message = "Thiếu giá cả")
     private double price;
+    @NotEmpty(message = "Thiếu khối lượng")
+    private int weight;
+    @NotEmpty
+    private boolean deliveryAvailable;
     private String mainImage;
 }

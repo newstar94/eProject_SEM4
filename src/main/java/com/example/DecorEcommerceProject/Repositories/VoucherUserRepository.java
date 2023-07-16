@@ -6,4 +6,5 @@ import com.example.DecorEcommerceProject.Entities.VoucherUser;
 
 @Repository
 public interface VoucherUserRepository extends JpaRepository<VoucherUser,Long> {
+    VoucherUser findVoucherUserByUserIdAndVoucherId(Long user_id, Long voucher_id);
 }

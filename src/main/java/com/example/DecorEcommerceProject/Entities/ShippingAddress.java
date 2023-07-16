@@ -20,7 +20,7 @@ public class ShippingAddress {
     private User user;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "shippingAddress")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "shippingAddress")
     private List<Order> orders;
 
     @Column(nullable = false)
@@ -30,7 +30,25 @@ public class ShippingAddress {
     private String phone;
 
     @Column(nullable = false)
-    private String address;
+    private String address;// địa chỉ cụ thể
+
+    @Column(nullable = false)
+    private int province_id;
+
+    @Column(nullable = false)
+    private String province;// tỉnh thành phố
+
+    @Column(nullable = false)
+    private int district_id;
+
+    @Column(nullable = false)
+    private String district; //quận huyện
+
+    @Column(nullable = false)
+    private String wardCode;
+
+    @Column(nullable = false)
+    private String ward; // phường xã
 
     private boolean active;
 }

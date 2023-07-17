@@ -38,10 +38,19 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getAllOrderByUseId(id));
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createOrder(@Validated @RequestBody OrderDTO orderDTO) {
+    @PostMapping("/place_order") //tiến hành đặt hàng
+    public ResponseEntity<?> placeOrder(@Validated @RequestBody OrderDTO orderDTO) {
         try {
-            Object order = orderService.createOrder(orderDTO);
+            Object order = orderService.placeOrder(orderDTO);
+            return ResponseEntity.ok(order);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    @GetMapping("/checkout") //trước bước tến hành đặt hàng, để hiện thị thông tin giá
+    public ResponseEntity<?> checkoutOrder(@Validated @RequestBody OrderDTO orderDTO) {
+        try {
+            Object order = orderService.checkoutOrder(orderDTO);
             return ResponseEntity.ok(order);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

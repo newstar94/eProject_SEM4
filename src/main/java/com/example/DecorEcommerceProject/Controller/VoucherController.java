@@ -24,14 +24,14 @@ public class VoucherController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(voucherService.getAllVoucher());
     }
-    @GetMapping("/voucher/check")
+    @GetMapping("/voucher/apply")
     public ResponseEntity<?> checkVoucherIsUsed(
             @RequestParam("voucherCode") String voucherCode,
             @RequestParam("username") String username) {
-        if (voucherService.checkVoucherIsUsed(voucherCode, username)){
+        if (!voucherService.checkVoucherAvailable(voucherCode, username)){
             return ResponseEntity.status(HttpStatus.OK).body("Áp mã voucher thành công");
         }
-            return ResponseEntity.status(HttpStatus.OK).body("Voucher không hợp lệ!");
+            return ResponseEntity.status(HttpStatus.OK).body("Voucher không hợp lệ hoặc đã hết lượt sử dụng!");
     }
 
     @PostMapping("voucher/create")

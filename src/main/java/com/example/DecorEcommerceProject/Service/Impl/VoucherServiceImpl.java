@@ -32,13 +32,16 @@ public class VoucherServiceImpl implements IVoucherService {
     }
 
     @Override
-    public boolean checkVoucherIsUsed(String voucherCode, String username) {
+    public boolean checkVoucherAvailable(String voucherCode, String username) {
         Voucher voucher = voucherRepository.findByCode(voucherCode);
         User user = userRepository.findByUsername(username);
         if (voucher != null && user != null) {
+            if (voucher.getLimit()==0){
+                return false;
+            }
             VoucherUser voucherUser = voucherUserRepository.findVoucherUserByUserIdAndVoucherId(user.getId(), voucher.getId());
             if (voucherUser!=null){
-                return voucherUser.isUsed();
+                return !voucherUser.isUsed();
             }
         }
         return false;

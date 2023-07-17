@@ -19,7 +19,7 @@ public class ProductDto {
     private double price;
     @NotEmpty(message = "Thiếu khối lượng")
     private int weight;
-    @NotEmpty
+    @NotEmpty(message = "Có cho phép vận chuyển GHN không?")
     private boolean deliveryAvailable;
     private String mainImage;
 }

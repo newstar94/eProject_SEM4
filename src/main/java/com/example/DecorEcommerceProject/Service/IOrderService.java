@@ -9,7 +9,8 @@ import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.OrderStatus;
 
 public interface IOrderService {
-    Object createOrder(OrderDTO orderDTO) throws Exception;
+    Object placeOrder(OrderDTO orderDTO) throws Exception;
+    Object checkoutOrder(OrderDTO orderDTO) throws Exception;
     Order confirmOrder(Long id) throws Exception;
     Order deliveringOrder(Long id) throws Exception;
     Order cancelOrder(Long id) throws IOException;

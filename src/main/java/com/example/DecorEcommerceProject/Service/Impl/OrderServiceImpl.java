@@ -2,13 +2,16 @@ package com.example.DecorEcommerceProject.Service.Impl;
 
 import com.example.DecorEcommerceProject.Entities.DTO.GhnDTO;
 import com.example.DecorEcommerceProject.Entities.DTO.ItemGHN;
+import com.example.DecorEcommerceProject.Entities.Enum.DeliveryType;
 import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Repositories.*;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.Data;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -27,14 +30,15 @@ import com.example.DecorEcommerceProject.Service.IOrderService;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.example.DecorEcommerceProject.Service.Impl.OrderServiceImpl.GhnApiHandler.*;
-
 @Service
 public class OrderServiceImpl implements IOrderService {
+    private final AdminConfigRepository adminConfigRepository;
     private final VoucherRepository voucherRepository;
+    private final VoucherUserRepository voucherUserRepository;
     private final ProductRepository productRepository;
     private final DiscountRepository discountRepository;
     private final OrderRepository orderRepository;
@@ -43,8 +47,10 @@ public class OrderServiceImpl implements IOrderService {
     private final UserRepository userRepository;
     private final VoucherServiceImpl voucherService;
 
-    public OrderServiceImpl(VoucherRepository voucherRepository, ProductRepository productRepository, DiscountRepository discountRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, PaymentServiceImpl paymentService, UserRepository userRepository, VoucherServiceImpl voucherService) {
+    public OrderServiceImpl(AdminConfigRepository adminConfigRepository, VoucherRepository voucherRepository, VoucherUserRepository voucherUserRepository, ProductRepository productRepository, DiscountRepository discountRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, PaymentServiceImpl paymentService, UserRepository userRepository, VoucherServiceImpl voucherService) {
+        this.adminConfigRepository = adminConfigRepository;
         this.voucherRepository = voucherRepository;
+        this.voucherUserRepository = voucherUserRepository;
         this.productRepository = productRepository;
         this.discountRepository = discountRepository;
         this.orderRepository = orderRepository;
@@ -56,20 +62,16 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional
-    public Object createOrder(OrderDTO orderDTO) throws Exception {
+    public Object placeOrder(OrderDTO orderDTO) throws Exception {
+        AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+        GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
+        GGMapApiHandler ggMapApiHandler = new GGMapApiHandler(adminConfigRepository);
         Order order = new Order();
         order.setStatus(OrderStatus.WAITING);
         order.setPaymentType(orderDTO.getPaymentType());
         order.setCreatedAt(LocalDateTime.now());
         order.setUser(orderDTO.getUser());
         order.setShippingAddress(orderDTO.getShippingAddress());
-        String receiverInfo = "Name: " + orderDTO.getShippingAddress().getName()
-                + "; Phone: " + orderDTO.getShippingAddress().getPhone()
-                + "; Address: " + orderDTO.getShippingAddress().getAddress()
-                + "," + orderDTO.getShippingAddress().getWard()
-                + "," + orderDTO.getShippingAddress().getDistrict()
-                + "," + orderDTO.getShippingAddress().getProvince();
-        order.setReceiverInfo(receiverInfo);
         List<OrderItem> orderItems = new ArrayList<>();
         for (OrderItemDTO orderItemDTO : orderDTO.getOrderItemDTOS()) {
             OrderItem orderItem = new OrderItem();
@@ -110,7 +112,6 @@ public class OrderServiceImpl implements IOrderService {
         order.setOrderItems(orderItems);
         double amount = 0;
         int weight = 0;
-        int deliveryFee = 0;
         int voucher_discount = 0;
         boolean deliveryAvailable = true;
         for (OrderItem orderItem : orderItems) {
@@ -122,17 +123,114 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         if (orderDTO.getVoucherCode() != null) {
-            if (!voucherService.checkVoucherIsUsed(orderDTO.getVoucherCode(), orderDTO.getUser().getUsername())) {
+            if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), orderDTO.getUser().getUsername())) {
                 Voucher voucher = voucherRepository.findByCode(orderDTO.getVoucherCode());
                 voucher_discount = (int) Math.min(amount - (amount * voucher.getPercentage() / 100), voucher.getAmountMax());
                 order.setVoucher_discount(voucher_discount);
                 order.setVoucher(voucher);
+                voucher.setLimit(voucher.getLimit() - 1);
+                voucherRepository.save(voucher);
+                VoucherUser voucherUser = voucherUserRepository.findVoucherUserByUserIdAndVoucherId(orderDTO.getUser().getId(), voucher.getId());
+                voucherUser.setUsed(true);
+                voucherUserRepository.save(voucherUser);
+            } else {
+                throw new ApplicationContextException("Voucher không hợp lệ hoặc đã hết lượt sử dụng!");
+            }
+        }
+        //Tính phí vận chuyển
+        deliveryFee(orderDTO, adminConfig, ghnApiHandler, ggMapApiHandler, order, amount, weight, voucher_discount, deliveryAvailable);
+        order = orderRepository.save(order);
+        for (OrderItem orderItem : orderItems) {
+            orderItem.setOrder(order);
+            orderItemRepository.save(orderItem);
+        }
+        return paymentService.createPayment(order.getId());
+    }
+
+    @Override
+    public Object checkoutOrder(OrderDTO orderDTO) throws Exception {
+        AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+        GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
+        GGMapApiHandler ggMapApiHandler = new GGMapApiHandler(adminConfigRepository);
+        Order order = new Order();
+        order.setCreatedAt(LocalDateTime.now());
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (OrderItemDTO orderItemDTO : orderDTO.getOrderItemDTOS()) {
+            OrderItem orderItem = new OrderItem();
+            Product product = productRepository.findById(orderItemDTO.getProductId())
+                    .orElseThrow(() -> new EntityNotFoundException("Not found product with id: " + orderItemDTO.getProductId()));
+            orderItem.setProduct(product);
+            List<DiscountHistory> discountHistories = product.getDiscountHistories();
+            if (discountHistories.size() == 0) {
+                orderItem.setPrice(product.getPrice());
+            }
+            for (DiscountHistory discountHistory : discountHistories) {
+                Discount discount = discountHistory.getDiscount();
+                if (discount.getStart().isBefore(LocalDateTime.now())
+                        && discount.getEnd().isAfter(LocalDateTime.now()) && discount.getLimit() > 0) {
+                    double discountAmount = Math.min(discount.getDiscountAmountMax(),
+                            product.getPrice() * discount.getDiscountPercentage() / 100);
+                    orderItem.setPrice(product.getPrice() - discountAmount);
+                    discount.setLimit(discount.getLimit() - orderItemDTO.getQuantity());
+                    int limit = discount.getLimit();
+                    if (limit >= 0) {
+                        break;
+                    }
+                    throw new ApplicationContextException("Not enough discount for product " + product.getName());
+                }
+                orderItem.setPrice(product.getPrice());
+            }
+            orderItem.setQuantity(orderItemDTO.getQuantity());
+            int inventory = product.getInventory() - orderItemDTO.getQuantity();
+            if (inventory < 0) {
+                throw new ApplicationContextException("Not enough inventory for product " + product.getName());
+            }
+            orderItems.add(orderItem);
+        }
+        order.setOrderItems(orderItems);
+        double amount = 0;
+        int weight = 0;
+        int voucher_discount = 0;
+        boolean deliveryAvailable = true;
+        for (OrderItem orderItem : orderItems) {
+            amount += orderItem.getPrice() * orderItem.getQuantity();
+            weight += orderItem.getProduct().getWeight();
+            if (!orderItem.getProduct().isDeliveryAvailable()) {
+                deliveryAvailable = false;
             }
         }
 
-        if (amount - voucher_discount >= 10000000) {
-            order.setDeliveryFee(0);
-        } else if (deliveryAvailable) {
+        if (orderDTO.getVoucherCode() != null) {
+            if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), orderDTO.getUser().getUsername())) {
+                Voucher voucher = voucherRepository.findByCode(orderDTO.getVoucherCode());
+                voucher_discount = (int) Math.min(amount - (amount * voucher.getPercentage() / 100), voucher.getAmountMax());
+                order.setVoucher_discount(voucher_discount);
+            } else {
+                throw new ApplicationContextException("Voucher không hợp lệ hoặc đã hết lượt sử dụng!");
+            }
+        }
+        //Tính phí vận chuyển
+        deliveryFee(orderDTO, adminConfig, ghnApiHandler, ggMapApiHandler, order, amount, weight, voucher_discount, deliveryAvailable);
+        for (OrderItem orderItem : orderItems) {
+            orderItem.setOrder(order);
+        }
+        return order;
+    }
+
+    private void deliveryFee(OrderDTO orderDTO, AdminConfig adminConfig, GhnApiHandler ghnApiHandler, GGMapApiHandler ggMapApiHandler, Order order, double amount, int weight, int voucher_discount, boolean deliveryAvailable) throws Exception {
+        int deliveryFee;
+        if (orderDTO.getDeliveryType() == DeliveryType.SHOP || !deliveryAvailable) {
+            String receiveAdd = orderDTO.getShippingAddress().getAddress()
+                    + "," + orderDTO.getShippingAddress().getWard()
+                    + "," + orderDTO.getShippingAddress().getDistrict()
+                    + "," + orderDTO.getShippingAddress().getProvince();
+            int distance = ggMapApiHandler.calculateDistance(receiveAdd) / 1000;
+            if (distance <= adminConfig.getMax_distance()) {
+                deliveryFee = adminConfig.getDelivery_fee();
+            } else {
+                deliveryFee = distance * adminConfig.getDelivery_fee_km();
+            }
+        } else {        //tính phí vận chuyển GHN
             RawData rawData = new RawData();
             rawData.setService_id(53320);
             rawData.setInsurance_value((int) Math.min(amount, 5000000));
@@ -141,27 +239,22 @@ public class OrderServiceImpl implements IOrderService {
             rawData.setWidth(30);
             rawData.setWeight(weight + 200);
             rawData.setCod_value((int) amount);
-            rawData.setTo_ward_code("1A0608"); //test
-            rawData.setTo_district_id(1485); //test
-//            rawData.setTo_district_id(orderDTO.getShippingAddress().getDistrict_id());
-//            rawData.setTo_ward_code(orderDTO.getShippingAddress().getWardCode());
+//            rawData.setTo_ward_code("1A0608"); //test
+//            rawData.setTo_district_id(1485); //test
+            rawData.setTo_district_id(orderDTO.getShippingAddress().getDistrict_id());
+            rawData.setTo_ward_code(orderDTO.getShippingAddress().getWardCode());
 
             Gson gson = new Gson();
             String jsonString = gson.toJson(rawData);
-
-            deliveryFee = getDeliveryFee(jsonString);
-            order.setDeliveryFee(deliveryFee);
+            deliveryFee = ghnApiHandler.getDeliveryFee(jsonString);
+        }
+        if (amount - voucher_discount >= adminConfig.getAmount_to_free()) {
+            order.setDeliveryFee(0);
         } else {
             order.setDeliveryFee(deliveryFee);
         }
         order.setAmount(amount);
         order.setTotal((int) (amount - voucher_discount + deliveryFee));
-        order = orderRepository.save(order);
-        for (OrderItem orderItem : orderItems) {
-            orderItem.setOrder(order);
-            orderItemRepository.save(orderItem);
-        }
-        return paymentService.createPayment(order.getId());
     }
 
     @Override
@@ -176,6 +269,7 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public Order deliveringOrder(Long id) throws Exception {
+        GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         if (existOrder.getStatus() == OrderStatus.PAID || existOrder.getStatus() == OrderStatus.CONFIRM) {
             GhnDTO ghnDTO = new GhnDTO();
@@ -206,15 +300,8 @@ public class OrderServiceImpl implements IOrderService {
             ghnDTO.setItems(items);
             Gson gson = new Gson();
             String jsonString = gson.toJson(ghnDTO);
-            if (!createGhn(jsonString).isEmpty()) {
-                String receiverInfo = "Name: " + existOrder.getShippingAddress().getName()
-                        + "; Phone: " + existOrder.getShippingAddress().getPhone()
-                        + "; Address: " + existOrder.getShippingAddress().getAddress()
-                        + "," + existOrder.getShippingAddress().getWard()
-                        + "," + existOrder.getShippingAddress().getDistrict()
-                        + "," + existOrder.getShippingAddress().getProvince();
-                existOrder.setReceiverInfo(receiverInfo);
-                existOrder.setGhnCode(createGhn(jsonString));
+            if (!ghnApiHandler.createGhn(jsonString).isEmpty()) {
+                existOrder.setGhnCode(ghnApiHandler.createGhn(jsonString));
                 existOrder.setStatus(OrderStatus.DELIVERING);
                 return orderRepository.save(existOrder);
             }
@@ -319,17 +406,41 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     public static class GhnApiHandler {
-        private static final String API_URL = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order";
+        private final AdminConfigRepository adminConfigRepository;
 
-        private static CloseableHttpClient createHttpClient() {
+        public GhnApiHandler(AdminConfigRepository adminConfigRepository) {
+            this.adminConfigRepository = adminConfigRepository;
+        }
+
+        private String getDeliveryFeeApiUrl() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getGhn_fee_url();
+        }
+
+        private String createGhnApiUrl() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getGhn_create_url();
+        }
+
+        private String getToken() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getGhn_token();
+        }
+
+        private String getShopId() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getShop_id();
+        }
+
+        private CloseableHttpClient createHttpClient() {
             return HttpClients.createDefault();
         }
 
-        private static JsonObject sendRequest(String apiUrl, String jsonString) throws Exception {
+        private JsonObject sendRequest(String apiUrl, String jsonString) throws Exception {
             CloseableHttpClient httpClient = createHttpClient();
             HttpPost httpPost = new HttpPost(apiUrl);
-            httpPost.setHeader("Token", "6ab4fe69-fe4e-11ed-b678-22ca76951087");
-            httpPost.setHeader("shop_id", "124400");
+            httpPost.setHeader("Token", getToken());
+            httpPost.setHeader("shop_id", getShopId());
 
             StringEntity requestEntity = new StringEntity(jsonString, ContentType.APPLICATION_JSON);
             httpPost.setEntity(requestEntity);
@@ -344,14 +455,68 @@ public class OrderServiceImpl implements IOrderService {
             return gson.fromJson(responseString, JsonObject.class);
         }
 
-        public static int getDeliveryFee(String jsonString) throws Exception {
-            JsonObject jsonObject = sendRequest(API_URL + "/fee", jsonString);
+        public int getDeliveryFee(String jsonString) throws Exception {
+            JsonObject jsonObject = sendRequest(getDeliveryFeeApiUrl(), jsonString);
             return jsonObject.getAsJsonObject("data").getAsJsonPrimitive("total").getAsInt();
         }
 
-        public static String createGhn(String jsonString) throws Exception {
-            JsonObject jsonObject = sendRequest(API_URL + "/create", jsonString);
+        public String createGhn(String jsonString) throws Exception {
+            JsonObject jsonObject = sendRequest(createGhnApiUrl(), jsonString);
             return jsonObject.getAsJsonObject("data").getAsJsonPrimitive("order_code").getAsString();
+        }
+    }
+
+    public static class GGMapApiHandler {
+        private final AdminConfigRepository adminConfigRepository;
+
+        public GGMapApiHandler(AdminConfigRepository adminConfigRepository) {
+            this.adminConfigRepository = adminConfigRepository;
+        }
+
+        private String getMapToken() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getMap_token();
+        }
+
+        private String getMapUrl() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getMap_url();
+        }
+
+        private String getAddress() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getAddress();
+        }
+
+        private CloseableHttpClient createHttpClient() {
+            return HttpClients.createDefault();
+        }
+
+        private JsonObject sendRequest(String receiveAdd) throws Exception {
+            CloseableHttpClient httpClient = createHttpClient();
+            String apiUrl = getMapUrl()
+                    + "?origins=" + URLEncoder.encode(getAddress(), "UTF-8")
+                    + "&destinations=" + URLEncoder.encode(receiveAdd, "UTF-8")
+                    + "&units=metric&key=" + getMapToken();
+            HttpGet httpGet = new HttpGet(apiUrl);
+            CloseableHttpResponse response = httpClient.execute(httpGet);
+            HttpEntity responseEntity = response.getEntity();
+            String responseString = EntityUtils.toString(responseEntity);
+
+            httpClient.close();
+
+            Gson gson = new Gson();
+            return gson.fromJson(responseString, JsonObject.class);
+        }
+
+        public int calculateDistance(String receiveAdd) throws Exception {
+            JsonObject jsonObject = sendRequest(receiveAdd).getAsJsonObject();
+            JsonArray rowsArray = jsonObject.getAsJsonArray("rows");
+            JsonObject rowObject = rowsArray.get(0).getAsJsonObject();
+            JsonArray elementsArray = rowObject.getAsJsonArray("elements");
+            JsonObject elementObject = elementsArray.get(0).getAsJsonObject();
+            JsonObject distanceObject = elementObject.getAsJsonObject("distance");
+            return distanceObject.get("value").getAsInt();
         }
     }
 }

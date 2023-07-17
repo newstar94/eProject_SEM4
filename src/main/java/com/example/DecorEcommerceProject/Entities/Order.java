@@ -45,9 +45,6 @@ public class Order {
     @Column
     private String ghnCode;
 
-    @Column
-    private String receiverInfo;
-
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItems = new ArrayList<>();
 

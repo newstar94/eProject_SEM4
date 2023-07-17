@@ -18,11 +18,13 @@ public class AdminConfig {
     private String vnp_apiUrl;
     private int delivery_fee_km; //phí vận chuyển cho 1km
     private int amount_to_free; //Giá trị đơn hàng để được miễn phí vận chuyển
-    private int max_distance; //khoảng cách áp giá vận chuyển đồng giá (dưới 5km đồng giá 50k)
+    private int max_distance; //khoảng cách áp giá vận chuyển đồng giá (dưới 5km đồng giá 40k)
     private int delivery_fee; //phí vận chuyển đồng giá
-    private String token; //token GHN
+    private String ghn_token; //token GHN
+    private String shop_id;
     private String ghn_fee_url; //url tính phí GHN
     private String ghn_create_url; //url tạo đơn GHN
     private String map_token; //token GGMap
     private String map_url; //url GGMap
+    private String address;
 }

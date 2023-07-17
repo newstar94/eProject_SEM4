@@ -1,19 +1,31 @@
 package com.example.DecorEcommerceProject;
 
 import com.example.DecorEcommerceProject.Entities.AdminConfig;
+import com.example.DecorEcommerceProject.Entities.Role;
+import com.example.DecorEcommerceProject.Entities.User;
 import com.example.DecorEcommerceProject.Repositories.AdminConfigRepository;
+import com.example.DecorEcommerceProject.Repositories.RoleRepository;
+import com.example.DecorEcommerceProject.Repositories.UserRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.stereotype.Component;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootApplication
 public class DecorEcommerceProjectApplication {
     private final AdminConfigRepository adminConfigRepository;
+    private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private PasswordEncoder passwordEncoder;
 
-    public DecorEcommerceProjectApplication(AdminConfigRepository adminConfigRepository) {
+
+    public DecorEcommerceProjectApplication(AdminConfigRepository adminConfigRepository, RoleRepository roleRepository, UserRepository userRepository) {
         this.adminConfigRepository = adminConfigRepository;
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
     }
 
     public static void main(String[] args) {
@@ -41,6 +53,25 @@ public class DecorEcommerceProjectApplication {
             adminConfig.setMap_token("AIzaSyD4wVTY8AFwxgsLzgUh9YcWcxsCMFol4g0");
             adminConfig.setAddress("158 Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội");
             adminConfigRepository.save(adminConfig);
+        }
+        if (roleRepository.count() == 0) {
+            List<Role> roleList = new ArrayList<>();
+            Role role1 = new Role();
+            role1.setName("ADMIN");
+            roleList.add(role1);
+            Role role2 = new Role();
+            role2.setName("USER");
+            roleList.add(role2);
+            Role role3 = new Role();
+            role3.setName("EMPLOYEE");
+            roleList.add(role3);
+            roleRepository.saveAll(roleList);
+        }
+        if (userRepository.count() == 0) {
+            User user = new User();
+            user.setUsername("ADMIN");
+            user.setPassword(passwordEncoder.encode("123456"));
+            userRepository.save(user);
         }
     }
 

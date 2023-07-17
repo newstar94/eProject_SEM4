@@ -53,6 +53,7 @@ public class UserServiceImpl implements IUserService{
                 return "Phone " + phone + " has already have role " + roleName + " !";
             }
             user.getRoles().add(role);
+            userRepository.save(user);
             return "Adding role " + roleName + " to " + phone + " successfully!";
         }
         return "";

@@ -7,20 +7,19 @@ import javax.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "shipping_addresses")
+@Table(name = "delivery_addresses")
 @Data
-public class ShippingAddress {
+public class DeliveryAddress {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "shippingAddress")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "deliveryAddress")
     private List<Order> orders;
 
     @Column(nullable = false)

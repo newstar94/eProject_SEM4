@@ -1,6 +1,6 @@
 package com.example.DecorEcommerceProject.Entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.example.DecorEcommerceProject.Entities.Enum.DeliveryType;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -10,8 +10,6 @@ import com.example.DecorEcommerceProject.Entities.Enum.PaymentType;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -39,8 +37,8 @@ public class Order {
     private Voucher voucher;
 
     @ManyToOne
-    @JoinColumn(name = "shipping_address_id")
-    private ShippingAddress shippingAddress;
+    @JoinColumn(name = "delivery_address_id",nullable = false)
+    private DeliveryAddress deliveryAddress;
 
     @Column
     private String ghnCode;
@@ -50,6 +48,9 @@ public class Order {
 
     @Column
     private PaymentType paymentType;
+
+    @Column
+    private DeliveryType deliveryType;
 
     @Column
     private double amount;

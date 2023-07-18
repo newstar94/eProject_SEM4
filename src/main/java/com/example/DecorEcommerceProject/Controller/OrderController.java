@@ -8,6 +8,7 @@ import com.example.DecorEcommerceProject.Entities.Order;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
 import com.example.DecorEcommerceProject.Service.IOrderService;
 import com.example.DecorEcommerceProject.Service.IPaymentService;
+
 import javax.persistence.EntityNotFoundException;
 import java.io.IOException;
 
@@ -47,6 +48,7 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
     @GetMapping("/checkout") //trước bước tến hành đặt hàng, để hiện thị thông tin giá
     public ResponseEntity<?> checkoutOrder(@Validated @RequestBody OrderDTO orderDTO) {
         try {
@@ -73,7 +75,7 @@ public class OrderController {
         }
     }
 
-    @PutMapping("/checkout/{id}")
+    @PutMapping("/place_order/{id}") //tiến hành thanh toán lại khi thanh toán onl chưa thành công
     public ResponseEntity<?> checkOut(@PathVariable Long id) {
         try {
             Object order = paymentService.createPayment(id);
@@ -109,6 +111,7 @@ public class OrderController {
             return ResponseEntity.ok().body(orderService.getOrderById(id));
         }
     }
+
     @PutMapping("/delivering/{id}") //for admin
     public ResponseEntity<?> deliveringOrder(@PathVariable Long id) {
         try {
@@ -124,6 +127,7 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
     @PutMapping("/cancel/{id}") //for user
     public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
         try {
@@ -139,6 +143,7 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
     @PutMapping("/return/{id}") //for user
     public ResponseEntity<?> returnOrder(@PathVariable Long id) {
         try {
@@ -154,6 +159,7 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
     @PutMapping("/finish/{id}") //for user
     public ResponseEntity<?> finishOrder(@PathVariable Long id) {
         try {
@@ -169,21 +175,20 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-    @GetMapping("/save")
-    public ResponseEntity<?> save(
-            @RequestParam(value = "vnp_TmnCode") String vnp_TmnCode,
-            @RequestParam(value = "vnp_Amount") String vnp_Amount,
-            @RequestParam(value = "vnp_BankCode") String vnp_BankCode,
-            @RequestParam(value = "vnp_BankTranNo") String vnp_BankTranNo,
-            @RequestParam(value = "vnp_CardType") String vnp_CardType,
-            @RequestParam(value = "vnp_PayDate") String vnp_PayDate,
-            @RequestParam(value = "vnp_OrderInfo") String vnp_OrderInfo,
-            @RequestParam(value = "vnp_TransactionNo") String vnp_TransactionNo,
-            @RequestParam(value = "vnp_ResponseCode") String vnp_ResponseCode,
-            @RequestParam(value = "vnp_TransactionStatus") String vnp_TransactionStatus,
-            @RequestParam(value = "vnp_TxnRef") String vnp_TxnRef,
-            @RequestParam(value = "vnp_SecureHash") String vnp_SecureHash
-    ) throws IOException {
-        return ResponseEntity.status(HttpStatus.OK).body(paymentService.getResult(vnp_TmnCode, vnp_Amount, vnp_BankCode, vnp_BankTranNo, vnp_CardType, vnp_PayDate, vnp_OrderInfo, vnp_TransactionNo, vnp_ResponseCode, vnp_TransactionStatus, vnp_TxnRef, vnp_SecureHash));
+
+    @PutMapping("/accept_return/{id}") //for admin
+    public ResponseEntity<?> acceptReturnOrder(@PathVariable Long id) {
+        try {
+            Order updatedOrder = orderService.acceptReturnOrder(id);
+            if (updatedOrder != null) {
+                return ResponseEntity.ok().body(updatedOrder);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not accept return order with id: " + id);
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }

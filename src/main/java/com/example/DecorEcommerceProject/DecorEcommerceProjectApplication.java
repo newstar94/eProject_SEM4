@@ -1,6 +1,7 @@
 package com.example.DecorEcommerceProject;
 
 import com.example.DecorEcommerceProject.Entities.AdminConfig;
+import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Entities.Role;
 import com.example.DecorEcommerceProject.Entities.User;
 import com.example.DecorEcommerceProject.Repositories.AdminConfigRepository;
@@ -12,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @SpringBootApplication
@@ -19,13 +22,14 @@ public class DecorEcommerceProjectApplication {
     private final AdminConfigRepository adminConfigRepository;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
 
-    public DecorEcommerceProjectApplication(AdminConfigRepository adminConfigRepository, RoleRepository roleRepository, UserRepository userRepository) {
+    public DecorEcommerceProjectApplication(AdminConfigRepository adminConfigRepository, RoleRepository roleRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.adminConfigRepository = adminConfigRepository;
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public static void main(String[] args) {
@@ -49,8 +53,8 @@ public class DecorEcommerceProjectApplication {
             adminConfig.setShop_id("124400");
             adminConfig.setGhn_fee_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee");
             adminConfig.setGhn_create_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create");
-            adminConfig.setMap_url("https://maps.googleapis.com/maps/api/distancematrix/json");
-            adminConfig.setMap_token("AIzaSyD4wVTY8AFwxgsLzgUh9YcWcxsCMFol4g0");
+            adminConfig.setMap_url("http://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix");
+            adminConfig.setMap_token("AsUeP0wj7060aELgchJgAXeswbHWrY5EmLw0NqMuhhaTBafzXyTSyedRWGmqxF58");
             adminConfig.setAddress("158 Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội");
             adminConfigRepository.save(adminConfig);
         }
@@ -71,6 +75,10 @@ public class DecorEcommerceProjectApplication {
             User user = new User();
             user.setUsername("ADMIN");
             user.setPassword(passwordEncoder.encode("123456"));
+            user.setName("ADMIN");
+            user.setEmail("admin@admin.com");
+            Role roles = roleRepository.findByName("USER");
+            user.setRoles(Collections.singletonList(roles));
             userRepository.save(user);
         }
     }

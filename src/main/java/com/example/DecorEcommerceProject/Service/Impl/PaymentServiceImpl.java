@@ -51,7 +51,7 @@ public class PaymentServiceImpl implements IPaymentService {
         }
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
-        long amount = order.getTotal() * 100L;
+        long amount = (long) (order.getAmount() * 100L);
         String vnp_TxnRef = String.valueOf(order.getId());
         String vnp_TmnCode = adminConfig.getVnp_TmnCode();
 

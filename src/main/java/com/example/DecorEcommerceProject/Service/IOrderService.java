@@ -15,6 +15,7 @@ public interface IOrderService {
     Order deliveringOrder(Long id) throws Exception;
     Order cancelOrder(Long id) throws IOException;
     Order returnOrder(Long id);
+    Order acceptReturnOrder(Long id)throws IOException;
     Order finishOrder(Long id);
     Optional<Order> getOrderById(Long id);
     List<Order> getAllOrder();

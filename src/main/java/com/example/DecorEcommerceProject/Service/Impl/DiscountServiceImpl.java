@@ -23,15 +23,18 @@ public class DiscountServiceImpl implements IDiscountService {
     private final DiscountRepository discountRepository;
     private final ProductRepository productRepository;
     private final DiscountHistoryRepository discountHistoryRepository;
+
     public DiscountServiceImpl(DiscountRepository discountRepository, ProductRepository productRepository, DiscountHistoryRepository discountHistoryRepository) {
         this.discountRepository = discountRepository;
         this.productRepository = productRepository;
         this.discountHistoryRepository = discountHistoryRepository;
     }
+
     @Override
     public List<Discount> getAllDiscount() {
         return discountRepository.findAll();
     }
+
     @Override
     public Optional<DiscountDTO> getDiscountById(Long id) {
         Optional<Discount> discount = discountRepository.findById(id);
@@ -44,12 +47,17 @@ public class DiscountServiceImpl implements IDiscountService {
         }
         return Optional.empty();
     }
+
     @Override
     @Transactional
     public Discount createDiscount(DiscountDTO discountDTO) {
-        Discount createdDiscount = discountRepository.save(discountDTO.getDiscount());
-        return saveDiscountHistory(discountDTO,createdDiscount);
+        if (discountDTO.getDiscount().getStart().isBefore(discountDTO.getDiscount().getEnd())) {
+            Discount createdDiscount = discountRepository.save(discountDTO.getDiscount());
+            return saveDiscountHistory(discountDTO, createdDiscount);
+        }
+        return null;
     }
+
     @Override
     @Transactional
     public Discount updateDiscount(Long id, DiscountDTO discountDTO) {
@@ -58,22 +66,27 @@ public class DiscountServiceImpl implements IDiscountService {
         if (discount.getStart().isAfter(LocalDateTime.now())) {
             discount = discountDTO.getDiscount();
             discount.setId(id);
-            discount = discountRepository.save(discount);
-            for (Product product : discountRepository.getAllProductByDiscountId(discount.getId())) {
-                discountHistoryRepository.deleteByProductIdAndDiscountId(product.getId(), discount.getId());
+            if (discount.getStart().isBefore(discount.getEnd())) {
+                discount = discountRepository.save(discount);
+                for (Product product : discountRepository.getAllProductByDiscountId(discount.getId())) {
+                    discountHistoryRepository.deleteByProductIdAndDiscountId(product.getId(), discount.getId());
+                }
+                return saveDiscountHistory(discountDTO, discount);
             }
-            return saveDiscountHistory(discountDTO,discount);
         }
         return null;
     }
+
     @Override
     public List<Discount> getAllDiscountByProductId(Long id) {
         return discountRepository.getAllDiscountByProductId(id);
     }
+
     @Override
-    public List<Product> getAllProductByDiscountId(Long id){
+    public List<Product> getAllProductByDiscountId(Long id) {
         return discountRepository.getAllProductByDiscountId(id);
     }
+
     private boolean isProductAlreadyApplied(Long productId, Discount newDiscount) {
         LocalDateTime startDate = newDiscount.getStart();
         LocalDateTime endDate = newDiscount.getEnd();
@@ -81,7 +94,7 @@ public class DiscountServiceImpl implements IDiscountService {
         assert product != null;
         for (DiscountHistory discountHistory : product.getDiscountHistories()) {
             Discount existingDiscount = discountHistory.getDiscount();
-            if (newDiscount.getId()==existingDiscount.getId()){
+            if (newDiscount.getId() == existingDiscount.getId()) {
                 continue;
             }
             if (startDate.isEqual(existingDiscount.getStart()) || endDate.isEqual(existingDiscount.getEnd())
@@ -93,14 +106,15 @@ public class DiscountServiceImpl implements IDiscountService {
         }
         return false;
     }
-    private Discount saveDiscountHistory(DiscountDTO discountDTO ,Discount discount){
+
+    private Discount saveDiscountHistory(DiscountDTO discountDTO, Discount discount) {
         List<String> message = new ArrayList<>();
         for (Product product : discountDTO.getProducts()) {
             if (isProductAlreadyApplied(product.getId(), discount)) {
                 message.add("Product " + productRepository.findById(product.getId()).get().getName() + " already has a discount applied within the desired time range");
             }
         }
-        if (message.size()!=0){
+        if (message.size() != 0) {
             throw new IllegalStateException(message.toString());
         }
         for (Product product : discountDTO.getProducts()) {

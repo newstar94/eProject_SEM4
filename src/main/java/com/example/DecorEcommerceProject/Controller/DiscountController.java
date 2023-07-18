@@ -45,7 +45,10 @@ public class DiscountController {
     public ResponseEntity<?> createDiscount(@Validated @RequestBody DiscountDTO discountDTO) {
         try {
             Discount discount = discountService.createDiscount(discountDTO);
-            return ResponseEntity.ok(discount);
+            if (discount!=null){
+                return ResponseEntity.ok(discount);
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not create discount");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }

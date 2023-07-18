@@ -51,7 +51,7 @@ public class PaymentServiceImpl implements IPaymentService {
         }
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
-        long amount = (long) (order.getAmount() * 100L);
+        long amount = order.getTotal() * 100L;
         String vnp_TxnRef = String.valueOf(order.getId());
         String vnp_TmnCode = adminConfig.getVnp_TmnCode();
 
@@ -181,7 +181,7 @@ public class PaymentServiceImpl implements IPaymentService {
         String vnp_TmnCode = adminConfig.getVnp_TmnCode();
         String vnp_TransactionType = "02"; // trả toàn bộ tiền
         String vnp_TxnRef = String.valueOf(order.getId());
-        long amount = (long) (order.getAmount() * 100);
+        long amount = order.getTotal() * 100L;
         String vnp_Amount = String.valueOf(amount);
         String vnp_OrderInfo = "Hoan tien GD OrderId:" + vnp_TxnRef;
         String vnp_TransactionNo = ""; //Assuming value of the parameter "vnp_TransactionNo" does not exist on your system.
@@ -252,7 +252,7 @@ public class PaymentServiceImpl implements IPaymentService {
         Gson gson = new Gson();
         JsonObject jsonObject = gson.fromJson(responseString, JsonObject.class);
         String vnp_ResponseCode = jsonObject.get("vnp_ResponseCode").getAsString();
-        return vnp_ResponseCode.equals("00");
+        return (vnp_ResponseCode.equals("00") || vnp_ResponseCode.equals("99"));
     }
 }
 

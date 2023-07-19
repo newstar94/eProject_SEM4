@@ -112,6 +112,11 @@ public class UserServiceImpl implements IUserService{
     }
 
     @Override
+    public List<User> getAllUsersByLevel(Level level) {
+        return userRepository.findByLevel(level);
+    }
+
+    @Override
     public User getByEmail(String email) {
         return userRepository.findByEmail(email);
     }

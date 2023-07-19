@@ -9,6 +9,5 @@ import java.util.List;
 @Data
 public class VoucherDTO {
     private Voucher voucher;
-    private Level level;
     private List<User> users;
 }

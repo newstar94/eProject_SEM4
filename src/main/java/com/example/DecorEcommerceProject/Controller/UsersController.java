@@ -1,6 +1,7 @@
 package com.example.DecorEcommerceProject.Controller;
 
 import com.example.DecorEcommerceProject.Entities.DTO.*;
+import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Entities.Role;
 import com.example.DecorEcommerceProject.Entities.User;
 import com.example.DecorEcommerceProject.Security.JwtGenerator;
@@ -34,6 +35,11 @@ public class UsersController {
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+    @GetMapping("/get-by-level")
+    public ResponseEntity<List<User>> getAllUsersByLevel(@RequestParam("level") Level level) {
+        List<User> users = userService.getAllUsersByLevel(level);
         return ResponseEntity.ok(users);
     }
     @PostMapping("/add")

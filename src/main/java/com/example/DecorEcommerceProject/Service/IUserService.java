@@ -1,6 +1,7 @@
 package com.example.DecorEcommerceProject.Service;
 
 import com.example.DecorEcommerceProject.Entities.DTO.RegisterRequest;
+import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Entities.Role;
 import com.example.DecorEcommerceProject.Entities.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +18,7 @@ public interface IUserService {
     User updateUser(Long id,User user);
     String deleteUser(Long id);
     List<User> getAllUsers();
+    List<User> getAllUsersByLevel(Level level);
 //    User findUserByUsername(String username);
 
     User getByEmail(String email);

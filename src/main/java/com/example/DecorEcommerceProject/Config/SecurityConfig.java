@@ -21,7 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 public class SecurityConfig {
     private final JwtAuthEntryPoint authEntryPoint;
-//    private CustomeUserDetailsService userDetailsService;
+
+    //    private CustomeUserDetailsService userDetailsService;
 //
 //    @Autowired
 //    public SecurityConfig(CustomeUserDetailsService userDetailsService) {
@@ -38,7 +39,7 @@ public class SecurityConfig {
     }
 
     //All Roles
-    private static final String[] ALLOW_ALL_URLS ={
+    private static final String[] ALLOW_ALL_URLS = {
             //Category
             "/api/categories",
             "/api/category/{id}",
@@ -48,7 +49,7 @@ public class SecurityConfig {
             "/api/product/{id}"
     };
 
-//    private static final String[] ALLOW_POST_ALL_URLS = {
+    //    private static final String[] ALLOW_POST_ALL_URLS = {
 //            "/api/category/add",
 //            "/api/products/add"
 //    };
@@ -60,6 +61,8 @@ public class SecurityConfig {
     private static final String[] ALLOW_GET_ADMIN_URLS = {
             //User
             "/api/users",
+            "/api/users/{id}",
+            "/api/users/get-by-level"
             //"/api/user/{id}"
     };
     private static final String[] ALLOW_POST_ADMIN_URLS = {
@@ -81,7 +84,7 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http)throws Exception{
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()
                 .exceptionHandling()
                 .authenticationEntryPoint(authEntryPoint)
@@ -95,9 +98,9 @@ public class SecurityConfig {
 //                .httpBasic();
 
         http.authorizeRequests().antMatchers(ALLOW_ALL_URLS).permitAll();
-        http.authorizeRequests().antMatchers(HttpMethod.GET,ALLOW_GET_USER_URLS).hasRole("USER");
-        http.authorizeRequests().antMatchers(HttpMethod.GET,ALLOW_GET_ADMIN_URLS).hasAnyAuthority("ADMIN");
-        http.authorizeRequests().antMatchers(HttpMethod.POST,ALLOW_POST_ADMIN_URLS).hasAnyAuthority("ADMIN");
+        http.authorizeRequests().antMatchers(HttpMethod.GET, ALLOW_GET_USER_URLS).hasRole("USER");
+        http.authorizeRequests().antMatchers(HttpMethod.GET, ALLOW_GET_ADMIN_URLS).hasAnyAuthority("ADMIN");
+        http.authorizeRequests().antMatchers(HttpMethod.POST, ALLOW_POST_ADMIN_URLS).hasAnyAuthority("ADMIN");
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -107,8 +110,9 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
+
     @Bean
-    public JWTAuthenticationFilter jwtAuthenticationFilter(){
+    public JWTAuthenticationFilter jwtAuthenticationFilter() {
         return new JWTAuthenticationFilter();
     }
 }

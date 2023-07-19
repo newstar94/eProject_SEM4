@@ -131,7 +131,7 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         if (orderDTO.getVoucherCode() != null && !orderDTO.getVoucherCode().isEmpty()) {
-            if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), orderDTO.getUser().getUsername())) {
+            if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), order.getUser().getUsername())) {
                 Voucher voucher = voucherRepository.findByCode(orderDTO.getVoucherCode());
                 voucher_discount = (int) Math.min(amount - (amount * voucher.getPercentage() / 100), voucher.getAmountMax());
                 order.setVoucher_discount(voucher_discount);
@@ -267,7 +267,12 @@ public class OrderServiceImpl implements IOrderService {
 
             Gson gson = new Gson();
             String jsonString = gson.toJson(rawData);
-            deliveryFee = ghnApiHandler.getDeliveryFee(jsonString);
+            try {
+                deliveryFee = ghnApiHandler.getDeliveryFee(jsonString);
+            }catch (Exception e){
+                throw new ApplicationContextException("Can not place order");
+            }
+
         }
         if (amount - voucher_discount >= adminConfig.getAmount_to_free()) {
             order.setDeliveryFee(0);

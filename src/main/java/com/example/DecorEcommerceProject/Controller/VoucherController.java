@@ -28,7 +28,7 @@ public class VoucherController {
     public ResponseEntity<?> checkVoucherIsUsed(
             @RequestParam("voucherCode") String voucherCode,
             @RequestParam("username") String username) {
-        if (!voucherService.checkVoucherAvailable(voucherCode, username)){
+        if (voucherService.checkVoucherAvailable(voucherCode, username)){
             return ResponseEntity.status(HttpStatus.OK).body("Áp mã voucher thành công");
         }
             return ResponseEntity.status(HttpStatus.OK).body("Voucher không hợp lệ hoặc đã hết lượt sử dụng!");
@@ -40,7 +40,7 @@ public class VoucherController {
             Voucher voucher = voucherService.createVoucher(voucherDTO);
             return ResponseEntity.ok(voucher);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not create voucher!");
         }
     }
 }

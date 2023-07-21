@@ -1,7 +1,7 @@
 package com.example.DecorEcommerceProject.Controller;
 
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
-import com.example.DecorEcommerceProject.Entities.DTO.SoldDTO;
+import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Product;
 import com.example.DecorEcommerceProject.Service.IProductService;
 import org.springframework.http.HttpStatus;
@@ -36,7 +36,7 @@ public class ProductsController {
     }
     @GetMapping("/product/{id}")
     public ResponseEntity<?> getProductByID(@PathVariable Long id){
-        if(!productService.getProductByID(id).isPresent()){
+        if(productService.getProductByID(id)==null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product with id "+id+" is not existed !");
         }else {
             return ResponseEntity.ok().body(productService.getProductByID(id));
@@ -89,12 +89,16 @@ public class ProductsController {
     }
     @GetMapping("/top-sold") //for user
     public ResponseEntity<?> getTopSold(@RequestParam("top") int top) {
-        List<SoldDTO> topSold = productService.getTopSold(top);
+        List<ResponseProductDTO> topSold = productService.getTopSold(top);
         return ResponseEntity.ok(topSold);
     }
     @GetMapping("/all-top-sold") //for admin
     public ResponseEntity<?> getAllTopSold(@RequestParam("top") int top) {
-        List<SoldDTO> topSold = productService.getAllTopSold(top);
+        List<ResponseProductDTO> topSold = productService.getAllTopSold(top);
         return ResponseEntity.ok(topSold);
+    }
+    @GetMapping("/total/{Id}")
+    public ResponseEntity<?> totalByCategoryId(@PathVariable Long Id){
+        return ResponseEntity.ok(productService.getTotalByCategoryId(Id));
     }
 }

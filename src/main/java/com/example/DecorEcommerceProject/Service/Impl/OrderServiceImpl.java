@@ -153,7 +153,7 @@ public class OrderServiceImpl implements IOrderService {
             orderItem.setOrder(order);
             orderItemRepository.save(orderItem);
         }
-        return paymentService.createPayment(order.getId(),request);
+        return paymentService.createPayment(order.getId(), request);
     }
 
     @Override
@@ -307,8 +307,9 @@ public class OrderServiceImpl implements IOrderService {
         }
         return null;
     }
+
     @Data
-    public static class print{
+    public static class print {
         private List<String> order_codes;
 
         public print(List<String> order_codes) {
@@ -378,7 +379,7 @@ public class OrderServiceImpl implements IOrderService {
             if (existOrder.getPaymentType() == PaymentType.ONLINE && existOrder.getStatus() == OrderStatus.WAITING) {
                 return cancelOrder(existOrder);
             }
-            if (paymentService.refund(existOrder,request)) {
+            if (paymentService.refund(existOrder, request)) {
                 return cancelOrder(existOrder);
             }
         }
@@ -387,14 +388,14 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional
-    public Order acceptReturnOrder(Long id,HttpServletRequest request) throws IOException {
+    public Order acceptReturnOrder(Long id, HttpServletRequest request) throws IOException {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         if (existOrder.getStatus() == OrderStatus.RETURN) {
             if (existOrder.getPaymentType() == PaymentType.COD) {
                 return cancelOrder(existOrder);
             }
             if (existOrder.getPaymentType() == PaymentType.ONLINE) {
-                if (paymentService.refund(existOrder,request)) {
+                if (paymentService.refund(existOrder, request)) {
                     return cancelOrder(existOrder);
                 }
             }
@@ -438,10 +439,16 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional
     public Order finishOrder(Long id) {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         if (existOrder.getStatus() == OrderStatus.DELIVERING) {
             existOrder.setStatus(OrderStatus.FINISHED);
+            for (OrderItem orderItem : existOrder.getOrderItems()) {
+                Product product = orderItem.getProduct();
+                product.setTotal_sold(product.getTotal_sold() + orderItem.getQuantity());
+                productRepository.save(product);
+            }
             User user = existOrder.getUser();
             if (user != null) {
                 user.setPoint((int) (user.getPoint() + existOrder.getAmount() / 1000));
@@ -505,6 +512,7 @@ public class OrderServiceImpl implements IOrderService {
             AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
             return adminConfig.getGhn_create_url();
         }
+
         private String printGhnApiUrl() {
             AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
             return adminConfig.getGhn_print_url();

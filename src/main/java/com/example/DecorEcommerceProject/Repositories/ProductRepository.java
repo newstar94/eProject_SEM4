@@ -1,10 +1,9 @@
 package com.example.DecorEcommerceProject.Repositories;
 
-import com.example.DecorEcommerceProject.Entities.DTO.SoldDTO;
+import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -25,9 +24,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> getAllProductsByKeyword(String keyword);
 
     @Query(
-            "SELECT NEW com.example.DecorEcommerceProject.Entities.DTO.SoldDTO( oi.product, SUM(oi.quantity)) FROM OrderItem oi GROUP BY oi.product " +
-                    "ORDER BY SUM(oi.quantity) DESC")
-    List<SoldDTO> getTopSelling();
+            value = "SELECT * FROM products " +
+                    "ORDER BY total_sold DESC LIMIT :top",
+            nativeQuery = true)
+    List<Product> getTopSelling(int top);
 
+    @Query(
+            value = "SELECT COUNT (*) FROM Product WHERE category.id = :Id"
+    )
+    Integer getTotalByCategoryId(Long Id);
 
 }

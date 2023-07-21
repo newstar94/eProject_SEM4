@@ -52,6 +52,9 @@ public class Product {
     @Column
     private boolean deliveryAvailable;
 
+    @Column
+    private int total_sold;
+
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "product")
     private List<DiscountHistory> discountHistories;

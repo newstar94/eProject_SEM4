@@ -1,11 +1,9 @@
 package com.example.DecorEcommerceProject.Service.Impl;
 
-import com.example.DecorEcommerceProject.Entities.Category;
+import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
-import com.example.DecorEcommerceProject.Entities.DTO.SoldDTO;
+import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.ProductStatus;
-import com.example.DecorEcommerceProject.Entities.Product;
-import com.example.DecorEcommerceProject.Entities.ProductImage;
 import com.example.DecorEcommerceProject.Repositories.CategoryRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductImageRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductRepository;
@@ -43,6 +41,7 @@ public class ProductServiceImpl implements IProductService {
         product.setInventory(productDto.getInventory());
         product.setStatus(ProductStatus.AVAILABLE);
         product.setPrice(productDto.getPrice());
+        product.setTotal_sold(0);
         String mainImageUrl = cloudinary.saveProductImageToCloudinary(imageFile);
         product.setMainImage(mainImageUrl);
         product.setCreatedAt(LocalDateTime.now());
@@ -62,18 +61,24 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ResponseProductDTO> getAllProducts() {
+        List<Product> products = productRepository.findAll();
+        return getList(products);
     }
 
     @Override
-    public List<Product> getAllProductByCategoryID(Long cateID) {
-        return productRepository.getAllProductByCategoryID(cateID);
+    public List<ResponseProductDTO> getAllProductByCategoryID(Long cateID) {
+        List<Product> products = productRepository.getAllProductByCategoryID(cateID);
+        return getList(products);
     }
 
     @Override
-    public Optional<Product> getProductByID(long id) {
-        return productRepository.findById(id);
+    public ResponseProductDTO getProductByID(long id) {
+        Product product = productRepository.findById(id).orElse(null);
+        assert product != null;
+        ResponseProductDTO responseProductDTO = new ResponseProductDTO();
+        getResponseProductDTO(product,responseProductDTO);
+        return responseProductDTO;
     }
 
     @Override
@@ -161,12 +166,13 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<Product> getAllProductsByKeyword(String keyword) {
-        return productRepository.getAllProductsByKeyword(keyword);
+    public List<ResponseProductDTO> getAllProductsByKeyword(String keyword) {
+        List<Product> products = productRepository.getAllProductsByKeyword(keyword);
+        return getList(products);
     }
 
     @Override
-    public List<Product> getAllProductByCateIDAndKeyword(long cateID, String keyword) {
+    public List<ResponseProductDTO> getAllProductByCateIDAndKeyword(long cateID, String keyword) {
         List<Product> getByKeyword = productRepository.getAllProductsByKeyword(keyword);
         List<Product> getByCateIDAndKeyword = new ArrayList<>();
         for (Product product : getByKeyword) {
@@ -174,24 +180,57 @@ public class ProductServiceImpl implements IProductService {
                 getByCateIDAndKeyword.add(product);
             }
         }
-        return getByCateIDAndKeyword;
+        return getList(getByCateIDAndKeyword);
     }
 
     @Override
-    public List<SoldDTO> getTopSold(int top) {
-        List<SoldDTO> list = productRepository.getTopSelling();
-        List<SoldDTO> topSold = new ArrayList<>();
-        for (SoldDTO sold : list) {
-            if (sold.getProduct().getStatus() != ProductStatus.UNAVAILABLE && sold.getProduct().getStatus() != ProductStatus.OUT_OF_STOCK) {
+    public List<ResponseProductDTO> getTopSold(int top) {
+        List<Product> list = productRepository.getTopSelling(top);
+        List<Product> topSold = new ArrayList<>();
+        for (Product sold : list) {
+            if (sold.getStatus() != ProductStatus.UNAVAILABLE && sold.getStatus() != ProductStatus.OUT_OF_STOCK) {
                 topSold.add(sold);
             }
         }
-        return topSold.subList(0, Math.min(topSold.size(), top));
+        return getList(topSold);
     }
 
     @Override
-    public List<SoldDTO> getAllTopSold(int top) {
-        List<SoldDTO> topSold = productRepository.getTopSelling();
-        return topSold.subList(0, Math.min(topSold.size(), top));
+    public List<ResponseProductDTO> getAllTopSold(int top) {
+        return getList(productRepository.getTopSelling(top));
+    }
+
+    @Override
+    public Integer getTotalByCategoryId(Long Id){
+       return productRepository.getTotalByCategoryId(Id);
+    }
+
+    public List<ResponseProductDTO> getList(List<Product> products) {
+        List<ResponseProductDTO> responseProductDTOS = new ArrayList<>();
+        for (Product product : products) {
+            ResponseProductDTO responseProductDTO = new ResponseProductDTO();
+            getResponseProductDTO(product,responseProductDTO);
+            responseProductDTOS.add(responseProductDTO);
+        }
+        return responseProductDTOS;
+    }
+
+    private void getResponseProductDTO(Product product, ResponseProductDTO responseProductDTO) {
+        responseProductDTO.setProduct(product);
+        List<DiscountHistory> discountHistories = product.getDiscountHistories();
+        if (discountHistories.size() == 0) {
+            responseProductDTO.setPrice_discount(product.getPrice());
+        }
+        for (DiscountHistory discountHistory : discountHistories) {
+            Discount discount = discountHistory.getDiscount();
+            if (discount.getStart().isBefore(LocalDateTime.now())
+                    && discount.getEnd().isAfter(LocalDateTime.now()) && discount.getLimit() > 0) {
+                double discountAmount = Math.min(discount.getDiscountAmountMax(),
+                        product.getPrice() * discount.getDiscountPercentage() / 100);
+                responseProductDTO.setPrice_discount(product.getPrice() - discountAmount);
+                break;
+            }
+            responseProductDTO.setPrice_discount(product.getPrice());
+        }
     }
 }

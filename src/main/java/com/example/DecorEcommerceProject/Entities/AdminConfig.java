@@ -24,6 +24,7 @@ public class AdminConfig {
     private String shop_id;
     private String ghn_fee_url; //url tính phí GHN
     private String ghn_create_url; //url tạo đơn GHN
+    private String ghn_print_url;
     private String map_token; //token GGMap
     private String map_url; //url GGMap
     private String address;

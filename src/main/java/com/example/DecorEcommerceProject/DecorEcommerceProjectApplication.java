@@ -53,6 +53,7 @@ public class DecorEcommerceProjectApplication {
             adminConfig.setShop_id("124400");
             adminConfig.setGhn_fee_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee");
             adminConfig.setGhn_create_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create");
+            adminConfig.setGhn_print_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/a5/gen-token");
             adminConfig.setMap_url("http://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix");
             adminConfig.setMap_token("AsUeP0wj7060aELgchJgAXeswbHWrY5EmLw0NqMuhhaTBafzXyTSyedRWGmqxF58");
             adminConfig.setAddress("158 Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội");
@@ -77,7 +78,7 @@ public class DecorEcommerceProjectApplication {
             user.setPassword(passwordEncoder.encode("123456"));
             user.setName("ADMIN");
             user.setEmail("admin@admin.com");
-            Role roles = roleRepository.findByName("USER");
+            Role roles = roleRepository.findByName("ADMIN");
             user.setRoles(Collections.singletonList(roles));
             userRepository.save(user);
         }

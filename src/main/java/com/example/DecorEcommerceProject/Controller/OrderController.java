@@ -10,6 +10,7 @@ import com.example.DecorEcommerceProject.Service.IOrderService;
 import com.example.DecorEcommerceProject.Service.IPaymentService;
 
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @RestController
@@ -40,9 +41,9 @@ public class OrderController {
     }
 
     @PostMapping("/place_order") //tiến hành đặt hàng
-    public ResponseEntity<?> placeOrder(@Validated @RequestBody OrderDTO orderDTO) {
+    public ResponseEntity<?> placeOrder(@Validated @RequestBody OrderDTO orderDTO, HttpServletRequest request) {
         try {
-            Object order = orderService.placeOrder(orderDTO);
+            Object order = orderService.placeOrder(orderDTO, request);
             return ResponseEntity.ok(order);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -76,9 +77,9 @@ public class OrderController {
     }
 
     @PutMapping("/place_order/{id}") //tiến hành thanh toán lại khi thanh toán onl chưa thành công
-    public ResponseEntity<?> checkOut(@PathVariable Long id) {
+    public ResponseEntity<?> checkOut(@PathVariable Long id, HttpServletRequest request) {
         try {
-            Object order = paymentService.createPayment(id);
+            Object order = paymentService.createPayment(id, request);
             return ResponseEntity.ok(order);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -128,10 +129,19 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/print/{id}") //for admin
+    public ResponseEntity<?> printOrder(@PathVariable Long id) throws Exception {
+        String printUrl = orderService.printOrder(id);
+        if (printUrl != null) {
+            return ResponseEntity.ok(printUrl);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not print!");
+    }
+
     @PutMapping("/cancel/{id}") //for user
-    public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
+    public ResponseEntity<?> cancelOrder(@PathVariable Long id,HttpServletRequest request) {
         try {
-            Order updatedOrder = orderService.cancelOrder(id);
+            Order updatedOrder = orderService.cancelOrder(id,request);
             if (updatedOrder != null) {
                 return ResponseEntity.ok().body(updatedOrder);
             } else {
@@ -177,9 +187,9 @@ public class OrderController {
     }
 
     @PutMapping("/accept_return/{id}") //for admin
-    public ResponseEntity<?> acceptReturnOrder(@PathVariable Long id) {
+    public ResponseEntity<?> acceptReturnOrder(@PathVariable Long id,HttpServletRequest request) {
         try {
-            Order updatedOrder = orderService.acceptReturnOrder(id);
+            Order updatedOrder = orderService.acceptReturnOrder(id,request);
             if (updatedOrder != null) {
                 return ResponseEntity.ok().body(updatedOrder);
             } else {

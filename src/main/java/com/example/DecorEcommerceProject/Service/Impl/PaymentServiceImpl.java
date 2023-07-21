@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -39,8 +40,11 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public Object createPayment(Long id) throws Exception {
+    public Object createPayment(Long id, HttpServletRequest request) throws Exception {
         Order order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
+        if (order.getStatus()!=OrderStatus.WAITING){
+            throw new Exception();
+        }
         ResponseObject responseObject = new ResponseObject();
         AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
         if (order.getPaymentType() == PaymentType.COD) {
@@ -54,6 +58,7 @@ public class PaymentServiceImpl implements IPaymentService {
         long amount = order.getTotal() * 100L;
         String vnp_TxnRef = String.valueOf(order.getId());
         String vnp_TmnCode = adminConfig.getVnp_TmnCode();
+        String vnp_IpAddr = request.getRemoteAddr();
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -66,7 +71,7 @@ public class PaymentServiceImpl implements IPaymentService {
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", adminConfig.getVnp_ReturnUrl());
         vnp_Params.put("vnp_OrderType", "other");
-        vnp_Params.put("vnp_IpAddr", "1.1.1.1"); //fix cứng ip là 1.1.1.1 khi vào môi trường product lấy ip sau
+        vnp_Params.put("vnp_IpAddr", vnp_IpAddr); //fix cứng ip là 1.1.1.1 khi vào môi trường product lấy ip sau
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -173,7 +178,7 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public boolean refund(Order order) throws IOException {
+    public boolean refund(Order order, HttpServletRequest request) throws IOException {
         AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
         String vnp_RequestId = PaymentConfig.getRandomNumber(8);
         String vnp_Version = "2.1.0";
@@ -199,7 +204,7 @@ public class PaymentServiceImpl implements IPaymentService {
 
         String vnp_CreateDate = formatter.format(cld.getTime());
 
-        String vnp_IpAddr = "192.168.0.1";
+        String vnp_IpAddr = request.getRemoteAddr();
 
         JsonObject vnp_Params = new JsonObject();
 

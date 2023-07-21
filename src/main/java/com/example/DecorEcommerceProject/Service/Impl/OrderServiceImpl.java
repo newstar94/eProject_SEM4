@@ -29,6 +29,7 @@ import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
 import com.example.DecorEcommerceProject.Service.IOrderService;
 
 import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -67,7 +68,7 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional
-    public Object placeOrder(OrderDTO orderDTO) throws Exception {
+    public Object placeOrder(OrderDTO orderDTO, HttpServletRequest request) throws Exception {
         AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
         GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         MapApiHandler mapApiHandler = new MapApiHandler(adminConfigRepository);
@@ -152,7 +153,7 @@ public class OrderServiceImpl implements IOrderService {
             orderItem.setOrder(order);
             orderItemRepository.save(orderItem);
         }
-        return paymentService.createPayment(order.getId());
+        return paymentService.createPayment(order.getId(),request);
     }
 
     @Override
@@ -269,7 +270,7 @@ public class OrderServiceImpl implements IOrderService {
             String jsonString = gson.toJson(rawData);
             try {
                 deliveryFee = ghnApiHandler.getDeliveryFee(jsonString);
-            }catch (Exception e){
+            } catch (Exception e) {
                 throw new ApplicationContextException("Can not place order");
             }
 
@@ -294,6 +295,28 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    public String printOrder(Long id) throws Exception {
+        GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
+        Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
+        List<String> order_codes = new ArrayList<>();
+        if (existOrder.getStatus() == OrderStatus.DELIVERING && existOrder.getDeliveryType() == DeliveryType.GHN) {
+            order_codes.add(existOrder.getGhnCode());
+            Gson gson = new Gson();
+            String jsonString = gson.toJson(new print(order_codes));
+            return "https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=" + ghnApiHandler.printGhn(jsonString);
+        }
+        return null;
+    }
+    @Data
+    public static class print{
+        private List<String> order_codes;
+
+        public print(List<String> order_codes) {
+            this.order_codes = order_codes;
+        }
+    }
+
+    @Override
     public Order deliveringOrder(Long id) throws Exception {
         GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
@@ -308,7 +331,7 @@ public class OrderServiceImpl implements IOrderService {
                 if (existOrder.getPaymentType() == PaymentType.ONLINE) {
                     ghnDTO.setCod_amount(0);
                 } else {
-                    ghnDTO.setCod_amount((int) existOrder.getAmount());
+                    ghnDTO.setCod_amount(existOrder.getTotal());
                 }
                 ghnDTO.setInsurance_value((int) Math.min(existOrder.getAmount(), 5000000));
                 ghnDTO.setService_id(53320);
@@ -337,7 +360,7 @@ public class OrderServiceImpl implements IOrderService {
                     return orderRepository.save(existOrder);
                 }
             }
-        }else {
+        } else {
             existOrder.setStatus(OrderStatus.DELIVERING);
             return orderRepository.save(existOrder);
         }
@@ -346,7 +369,7 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional
-    public Order cancelOrder(Long id) throws IOException {
+    public Order cancelOrder(Long id, HttpServletRequest request) throws IOException {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         if (existOrder.getStatus() == OrderStatus.PAID || existOrder.getStatus() == OrderStatus.WAITING || existOrder.getStatus() == OrderStatus.CONFIRM) {
             if (existOrder.getPaymentType() == PaymentType.COD) {
@@ -355,7 +378,7 @@ public class OrderServiceImpl implements IOrderService {
             if (existOrder.getPaymentType() == PaymentType.ONLINE && existOrder.getStatus() == OrderStatus.WAITING) {
                 return cancelOrder(existOrder);
             }
-            if (paymentService.refund(existOrder)) {
+            if (paymentService.refund(existOrder,request)) {
                 return cancelOrder(existOrder);
             }
         }
@@ -364,14 +387,14 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional
-    public Order acceptReturnOrder(Long id) throws IOException {
+    public Order acceptReturnOrder(Long id,HttpServletRequest request) throws IOException {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         if (existOrder.getStatus() == OrderStatus.RETURN) {
             if (existOrder.getPaymentType() == PaymentType.COD) {
                 return cancelOrder(existOrder);
             }
             if (existOrder.getPaymentType() == PaymentType.ONLINE) {
-                if (paymentService.refund(existOrder)) {
+                if (paymentService.refund(existOrder,request)) {
                     return cancelOrder(existOrder);
                 }
             }
@@ -482,6 +505,10 @@ public class OrderServiceImpl implements IOrderService {
             AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
             return adminConfig.getGhn_create_url();
         }
+        private String printGhnApiUrl() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getGhn_print_url();
+        }
 
         private String getToken() {
             AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
@@ -524,6 +551,11 @@ public class OrderServiceImpl implements IOrderService {
         public String createGhn(String jsonString) throws Exception {
             JsonObject jsonObject = sendRequest(createGhnApiUrl(), jsonString);
             return jsonObject.getAsJsonObject("data").getAsJsonPrimitive("order_code").getAsString();
+        }
+
+        public String printGhn(String jsonString) throws Exception {
+            JsonObject jsonObject = sendRequest(printGhnApiUrl(), jsonString);
+            return jsonObject.getAsJsonObject("data").getAsJsonPrimitive("token").getAsString();
         }
     }
 

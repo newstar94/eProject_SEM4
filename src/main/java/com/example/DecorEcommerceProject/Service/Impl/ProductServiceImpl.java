@@ -2,6 +2,7 @@ package com.example.DecorEcommerceProject.Service.Impl;
 
 import com.example.DecorEcommerceProject.Entities.Category;
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
+import com.example.DecorEcommerceProject.Entities.DTO.SoldDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.ProductStatus;
 import com.example.DecorEcommerceProject.Entities.Product;
 import com.example.DecorEcommerceProject.Entities.ProductImage;
@@ -11,6 +12,7 @@ import com.example.DecorEcommerceProject.Repositories.ProductRepository;
 import com.example.DecorEcommerceProject.Service.IProductService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -175,8 +177,21 @@ public class ProductServiceImpl implements IProductService {
         return getByCateIDAndKeyword;
     }
 
-//    @Override
-//    public List<ProductTopSellerDto> getTopSellerOfBook(int topNumber) {
-//        List<Tuple> getTopSeller = productRepository.getTop_Number_Product_Best_Seller(topNumber);
-//    }
+    @Override
+    public List<SoldDTO> getTopSold(int top) {
+        List<SoldDTO> list = productRepository.getTopSelling();
+        List<SoldDTO> topSold = new ArrayList<>();
+        for (SoldDTO sold : list) {
+            if (sold.getProduct().getStatus() != ProductStatus.UNAVAILABLE && sold.getProduct().getStatus() != ProductStatus.OUT_OF_STOCK) {
+                topSold.add(sold);
+            }
+        }
+        return topSold.subList(0, Math.min(topSold.size(), top));
+    }
+
+    @Override
+    public List<SoldDTO> getAllTopSold(int top) {
+        List<SoldDTO> topSold = productRepository.getTopSelling();
+        return topSold.subList(0, Math.min(topSold.size(), top));
+    }
 }

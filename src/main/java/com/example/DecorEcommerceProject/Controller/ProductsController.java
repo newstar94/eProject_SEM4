@@ -1,13 +1,9 @@
 package com.example.DecorEcommerceProject.Controller;
 
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
-import com.example.DecorEcommerceProject.Entities.DTO.ProductTopSellerDto;
+import com.example.DecorEcommerceProject.Entities.DTO.SoldDTO;
 import com.example.DecorEcommerceProject.Entities.Product;
-import com.example.DecorEcommerceProject.Repositories.ProductRepository;
-import com.example.DecorEcommerceProject.Service.ICategoryService;
 import com.example.DecorEcommerceProject.Service.IProductService;
-import com.example.DecorEcommerceProject.Service.Impl.ProductServiceImpl;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -91,9 +87,14 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-//    @GetMapping("/top-best-seller")
-//    public ResponseEntity<List<ProductTopSellerDto>> getTopBestSeller(@RequestParam("topNumber") int topNumber) {
-//        List<ProductTopSellerDto> topSellers = productService.getTopSellerOfProduct(topNumber);
-//        return ResponseEntity.ok(topSellers);
-//    }
+    @GetMapping("/top-sold") //for user
+    public ResponseEntity<?> getTopSold(@RequestParam("top") int top) {
+        List<SoldDTO> topSold = productService.getTopSold(top);
+        return ResponseEntity.ok(topSold);
+    }
+    @GetMapping("/all-top-sold") //for admin
+    public ResponseEntity<?> getAllTopSold(@RequestParam("top") int top) {
+        List<SoldDTO> topSold = productService.getAllTopSold(top);
+        return ResponseEntity.ok(topSold);
+    }
 }

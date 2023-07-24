@@ -26,9 +26,9 @@ public class ProductsController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(productService.getAllProducts());
     }
-    @GetMapping("index")
-    public ResponseEntity<?> getRandomAmountOfProductsIndex() {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.getRandomAmountOfProducts());
+    @GetMapping("index/{size}")
+    public ResponseEntity<?> getRandomAmountOfProductsIndex(@PathVariable int size) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.getRandomAmountOfProducts(size));
     }
 
     @GetMapping("/search")

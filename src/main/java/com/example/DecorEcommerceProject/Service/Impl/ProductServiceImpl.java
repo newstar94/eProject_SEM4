@@ -4,7 +4,6 @@ import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
 import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.ProductStatus;
-import com.example.DecorEcommerceProject.Exception.NotFoundException;
 import com.example.DecorEcommerceProject.Repositories.CategoryRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductImageRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductRepository;
@@ -68,14 +67,13 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ResponseProductDTO> getRandomAmountOfProducts(){
+    public List<ResponseProductDTO> getRandomAmountOfProducts(int size) {
         List<Product> productList = productRepository.findAll();
         if (productList.isEmpty()) {
             throw new EntityNotFoundException("Couldn't find any product in DB");
         }
         Collections.shuffle(productList);
-        int randomSeriesLength = 5;
-        List randomProducts =  productList.subList(0, randomSeriesLength);
+        List<Product> randomProducts = productList.subList(0, size);
         return getList(randomProducts);
     }
 
@@ -90,7 +88,7 @@ public class ProductServiceImpl implements IProductService {
         Product product = productRepository.findById(id).orElse(null);
         assert product != null;
         ResponseProductDTO responseProductDTO = new ResponseProductDTO();
-        getResponseProductDTO(product,responseProductDTO);
+        getResponseProductDTO(product, responseProductDTO);
         return responseProductDTO;
     }
 
@@ -214,15 +212,15 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public Integer getTotalByCategoryId(Long Id){
-       return productRepository.getTotalByCategoryId(Id);
+    public Integer getTotalByCategoryId(Long Id) {
+        return productRepository.getTotalByCategoryId(Id);
     }
 
     public List<ResponseProductDTO> getList(List<Product> products) {
         List<ResponseProductDTO> responseProductDTOS = new ArrayList<>();
         for (Product product : products) {
             ResponseProductDTO responseProductDTO = new ResponseProductDTO();
-            getResponseProductDTO(product,responseProductDTO);
+            getResponseProductDTO(product, responseProductDTO);
             responseProductDTOS.add(responseProductDTO);
         }
         return responseProductDTOS;

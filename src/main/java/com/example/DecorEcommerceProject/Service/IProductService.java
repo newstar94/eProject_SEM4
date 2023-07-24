@@ -3,7 +3,6 @@ package com.example.DecorEcommerceProject.Service;
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
 import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Product;
-import com.example.DecorEcommerceProject.Exception.NotFoundException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -11,7 +10,7 @@ import java.util.List;
 public interface IProductService {
     Product createProduct(ProductDto productDto, MultipartFile imageFile, List<MultipartFile> extraImages);
     List<ResponseProductDTO> getAllProducts();
-    List<ResponseProductDTO> getRandomAmountOfProducts();
+    List<ResponseProductDTO> getRandomAmountOfProducts(int size );
     List<ResponseProductDTO> getAllProductByCategoryID(Long cateID);
     ResponseProductDTO getProductByID(long id);
     String deleteProduct(Long id);

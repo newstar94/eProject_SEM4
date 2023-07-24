@@ -4,6 +4,7 @@ import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
 import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.ProductStatus;
+import com.example.DecorEcommerceProject.Exception.NotFoundException;
 import com.example.DecorEcommerceProject.Repositories.CategoryRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductImageRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductRepository;
@@ -64,6 +65,18 @@ public class ProductServiceImpl implements IProductService {
     public List<ResponseProductDTO> getAllProducts() {
         List<Product> products = productRepository.findAll();
         return getList(products);
+    }
+
+    @Override
+    public List<ResponseProductDTO> getRandomAmountOfProducts(){
+        List<Product> productList = productRepository.findAll();
+        if (productList.isEmpty()) {
+            throw new EntityNotFoundException("Couldn't find any product in DB");
+        }
+        Collections.shuffle(productList);
+        int randomSeriesLength = 5;
+        List randomProducts =  productList.subList(0, randomSeriesLength);
+        return getList(randomProducts);
     }
 
     @Override

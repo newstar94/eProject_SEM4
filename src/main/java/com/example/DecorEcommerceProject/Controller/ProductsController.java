@@ -26,6 +26,11 @@ public class ProductsController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(productService.getAllProducts());
     }
+    @GetMapping("index")
+    public ResponseEntity<?> getRandomAmountOfProductsIndex() {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.getRandomAmountOfProducts());
+    }
+
     @GetMapping("/search")
     public ResponseEntity<?> getAllProductsByKeyword(@RequestParam("keyword") String keyword) {
         if(productService.getAllProductsByKeyword(keyword).size() == 0){

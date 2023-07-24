@@ -38,6 +38,6 @@ public interface IUserService {
     void changePassword(User user, String newPassword);
 
     boolean checkIfValidOldPassword(User user, String oldPassword);
-    UserDetails login (String phone, String password);
+    UserDetails login (String identifier, String password);
     User register(RegisterRequest model);
 }

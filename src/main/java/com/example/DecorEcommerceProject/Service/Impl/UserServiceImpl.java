@@ -5,6 +5,7 @@ import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Entities.Role;
 import com.example.DecorEcommerceProject.Entities.Token.PasswordResetToken;
 import com.example.DecorEcommerceProject.Entities.User;
+import com.example.DecorEcommerceProject.Exception.BadRequestException;
 import com.example.DecorEcommerceProject.Repositories.PasswordResetTokenRepository;
 import com.example.DecorEcommerceProject.Repositories.RoleRepository;
 import com.example.DecorEcommerceProject.Repositories.UserRepository;
@@ -126,6 +127,8 @@ public class UserServiceImpl implements IUserService{
         return  userRepository.findUserByPhone(phone);
     }
 
+   
+
     @Override
     public User updateUserByLoggedIn(User user) {
         user.setName(user.getName());
@@ -184,7 +187,7 @@ public class UserServiceImpl implements IUserService{
     public UserDetails login(String phone, String password) {
         User user = userRepository.findUserByPhone(phone);
         if (user == null) {
-            throw new UsernameNotFoundException("User not found with phone: " + phone);
+            throw new UsernameNotFoundException("User not found with : " + phone);
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -197,12 +200,19 @@ public class UserServiceImpl implements IUserService{
                 .build();
     }
 
+
+
     @Override
-    public User register(RegisterRequest model) {
+    public User register(RegisterRequest model){
+        String password = model.getPassword();
+        String confirmPassword = model.getConfirmPassword();
+        if (!password.equals(confirmPassword)) {
+            throw new  BadRequestException("Password and Confirm Password do not match.");
+        }
         User user = new User();
         user.setUsername(model.getUsername());
         user.setName(model.getName());
-        user.setPassword(passwordEncoder.encode(model.getPassword()));
+        user.setPassword(passwordEncoder.encode(password));
         user.setPhone(model.getPhone());
         user.setEmail(model.getEmail());
         user.setAddress(model.getAddress());
@@ -211,8 +221,6 @@ public class UserServiceImpl implements IUserService{
         Role roles = roleRepository.findByName("USER");
         user.setRoles(Collections.singletonList(roles));
         return userRepository.save(user);
-
-
 
     }
 

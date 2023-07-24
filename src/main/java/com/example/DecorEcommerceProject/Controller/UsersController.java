@@ -47,11 +47,9 @@ public class UsersController {
         User existedUser = userService.findUserByPhone(user.getPhone());
         if(existedUser != null){
             return  ResponseEntity.badRequest().body("Cannot create this account. Phone has existed!");
-        }else {
-            User createdUser = userService.register(user);
-            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
-//            return ResponseEntity.ok().body("Created Successful");
         }
+        User createdUser = userService.register(user);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")

@@ -14,6 +14,7 @@ public interface IProductService {
     List<ResponseProductDTO> getAllProductByCategoryID(Long cateID);
     ResponseProductDTO getProductByID(long id);
     String deleteProduct(Long id);
+    void deleteExtraImage(Long id);
     Product updateProduct(Long id, ProductDto productDto, MultipartFile mainImageFile, List<MultipartFile> extraImageFiles);
     List<ResponseProductDTO> getAllProductsByKeyword(String keyword);
     List<ResponseProductDTO> getAllProductByCateIDAndKeyword(long cateID, String keyword);

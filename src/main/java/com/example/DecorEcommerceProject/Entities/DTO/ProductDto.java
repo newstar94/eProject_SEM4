@@ -32,5 +32,4 @@ public class ProductDto {
     @NotEmpty(message = "Thiếu trạng thái sản phẩm")
     private ProductStatus productStatus;
 
-    private String mainImage;
 }

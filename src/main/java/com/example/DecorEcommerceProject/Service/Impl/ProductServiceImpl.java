@@ -137,27 +137,24 @@ public class ProductServiceImpl implements IProductService {
                 throw new RuntimeException("Failed to upload main image");
             }
         }
-        List<ProductImage> updatedExtraImages = new ArrayList<>();
-        deleteProductImages(existingProduct);
         try {
             saveExtraImages(extraImages, existingProduct);
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload extra image");
         }
-        existingProduct.setImages(updatedExtraImages);
         existingProduct.setUpdatedAt(LocalDateTime.now());
         productRepository.save(existingProduct);
         return existingProduct;
     }
-
-    private void deleteProductImages(Product product) {
-        List<ProductImage> productImages = product.getImages();
-        if (productImages != null && !productImages.isEmpty()) {
-            for (ProductImage productImage : productImages) {
-                // Delete the image from Cloudinary
-                cloudinary.deleteProductImageFromCloudinary(productImage.getImageUrl());
-            }
-            productImageRepository.deleteByProductId(product.getId());
+    @Override
+    public void deleteExtraImage(Long id) {
+        ProductImage image = productImageRepository.findById(id).orElse(null);
+        assert image != null;
+        try {
+            cloudinary.deleteProductImageFromCloudinary(image.getImageUrl());
+            productImageRepository.deleteById(image.getId());
+        }catch (Exception e){
+            throw new RuntimeException("Failed to delete image");
         }
     }
 

@@ -54,10 +54,12 @@ public class ProductServiceImpl implements IProductService {
             product.setCategory(category);
         }
         productRepository.save(product);
-        try {
-            saveExtraImages(extraImages, product);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (extraImages.size() != 0 && !extraImages.get(0).getOriginalFilename().isEmpty()){
+            try {
+                saveExtraImages(extraImages, product);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload extra image");
+            }
         }
         return product;
     }
@@ -116,7 +118,7 @@ public class ProductServiceImpl implements IProductService {
         existingProduct.setInventory(productDto.getInventory());
         if (productDto.getInventory() == 0) {
             existingProduct.setStatus(ProductStatus.OUT_OF_STOCK);
-        }else {
+        } else {
             existingProduct.setStatus(ProductStatus.AVAILABLE);
         }
         existingProduct.setPrice(productDto.getPrice());
@@ -141,10 +143,12 @@ public class ProductServiceImpl implements IProductService {
                 throw new RuntimeException("Failed to upload main image");
             }
         }
-        try {
-            saveExtraImages(extraImages, existingProduct);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to upload extra image");
+        if (extraImages.size() != 0 && !extraImages.get(0).getOriginalFilename().isEmpty()) {
+            try {
+                saveExtraImages(extraImages, existingProduct);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload extra image");
+            }
         }
         existingProduct.setUpdatedAt(LocalDateTime.now());
         productRepository.save(existingProduct);

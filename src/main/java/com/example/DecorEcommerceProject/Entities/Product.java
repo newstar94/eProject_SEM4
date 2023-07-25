@@ -56,7 +56,7 @@ public class Product {
     private int total_sold;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "product")
+    @OneToMany(fetch = FetchType.LAZY,mappedBy = "product", cascade = CascadeType.ALL)
     private List<DiscountHistory> discountHistories;
 
     @JsonIgnore

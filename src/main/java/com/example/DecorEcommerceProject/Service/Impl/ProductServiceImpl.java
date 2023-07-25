@@ -114,7 +114,11 @@ public class ProductServiceImpl implements IProductService {
         existingProduct.setName(productDto.getName());
         existingProduct.setDescription(productDto.getDescription());
         existingProduct.setInventory(productDto.getInventory());
-        existingProduct.setStatus(productDto.getProductStatus());
+        if (productDto.getInventory() == 0) {
+            existingProduct.setStatus(ProductStatus.OUT_OF_STOCK);
+        }else {
+            existingProduct.setStatus(ProductStatus.AVAILABLE);
+        }
         existingProduct.setPrice(productDto.getPrice());
         existingProduct.setDeliveryAvailable(productDto.isDeliveryAvailable());
         existingProduct.setWeight(productDto.getWeight());
@@ -201,7 +205,7 @@ public class ProductServiceImpl implements IProductService {
         List<Product> list = productRepository.getTopSelling(top);
         List<Product> topSold = new ArrayList<>();
         for (Product sold : list) {
-            if (sold.getStatus() != ProductStatus.UNAVAILABLE && sold.getStatus() != ProductStatus.OUT_OF_STOCK) {
+            if (sold.getStatus() != ProductStatus.OUT_OF_STOCK) {
                 topSold.add(sold);
             }
         }
@@ -221,7 +225,7 @@ public class ProductServiceImpl implements IProductService {
     @Override
     public List<ResponseProductDTO> getAllProductByRangeOfPrice(int bottom, int top, List<Product> products) {
         List<Product> productList = new ArrayList<>();
-        for (Product product:products){
+        for (Product product : products) {
             productList.add(productRepository.findById(product.getId()).orElse(null));
         }
         List<ResponseProductDTO> list = getList(productList);

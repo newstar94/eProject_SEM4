@@ -91,9 +91,9 @@ public class ProductsController {
 
     @PutMapping("/save/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id,
-                                        @ModelAttribute ProductDto productDto,
-                                        @RequestParam(value = "imageFile", required = false) MultipartFile mainImageFile,
-                                        @RequestParam(value = "extraImages", required = false) List<MultipartFile> extraImages) {
+                                           @ModelAttribute ProductDto productDto,
+                                           @RequestParam(value = "imageFile", required = false) MultipartFile mainImageFile,
+                                           @RequestParam(value = "extraImages", required = false) List<MultipartFile> extraImages) {
         try {
             Product updatedProduct = productService.updateProduct(id, productDto, mainImageFile, extraImages);
             return ResponseEntity.ok(updatedProduct);
@@ -101,15 +101,17 @@ public class ProductsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    @PostMapping(value = "delete-image/{id}")
-    public ResponseEntity<?> deleteImage(@PathVariable Long id){
+
+    @PostMapping("delete-image/{id}")
+    public ResponseEntity<?> deleteImage(@PathVariable Long id) {
         try {
             productService.deleteExtraImage(id);
             return ResponseEntity.ok("Deleted");
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
     @GetMapping("/top-sold") //for user
     public ResponseEntity<?> getTopSold(@RequestParam("top") int top) {
         List<ResponseProductDTO> topSold = productService.getTopSold(top);
@@ -125,5 +127,16 @@ public class ProductsController {
     @GetMapping("/total/{Id}")
     public ResponseEntity<?> totalByCategoryId(@PathVariable Long Id) {
         return ResponseEntity.ok(productService.getTotalByCategoryId(Id));
+    }
+
+    @PostMapping("/get-by-price")
+    public ResponseEntity<?> getByPrice(@RequestParam("bottom") int bottom,
+                                        @RequestParam("top") int top,
+                                        @RequestBody List<Product> products) {
+        List<ResponseProductDTO> list = productService.getAllProductByRangeOfPrice(bottom, top, products);
+        if (list.size() != 0) {
+            return ResponseEntity.ok(list);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not found!");
     }
 }

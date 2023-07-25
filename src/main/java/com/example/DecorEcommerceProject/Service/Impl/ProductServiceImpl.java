@@ -146,6 +146,7 @@ public class ProductServiceImpl implements IProductService {
         productRepository.save(existingProduct);
         return existingProduct;
     }
+
     @Override
     public void deleteExtraImage(Long id) {
         ProductImage image = productImageRepository.findById(id).orElse(null);
@@ -153,7 +154,7 @@ public class ProductServiceImpl implements IProductService {
         try {
             cloudinary.deleteProductImageFromCloudinary(image.getImageUrl());
             productImageRepository.deleteById(image.getId());
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Failed to delete image");
         }
     }
@@ -215,6 +216,22 @@ public class ProductServiceImpl implements IProductService {
     @Override
     public Integer getTotalByCategoryId(Long Id) {
         return productRepository.getTotalByCategoryId(Id);
+    }
+
+    @Override
+    public List<ResponseProductDTO> getAllProductByRangeOfPrice(int bottom, int top, List<Product> products) {
+        List<Product> productList = new ArrayList<>();
+        for (Product product:products){
+            productList.add(productRepository.findById(product.getId()).orElse(null));
+        }
+        List<ResponseProductDTO> list = getList(productList);
+        List<ResponseProductDTO> newList = new ArrayList<>();
+        for (ResponseProductDTO product : list) {
+            if (product.getPrice_discount() >= bottom && product.getPrice_discount() <= top) {
+                newList.add(product);
+            }
+        }
+        return newList;
     }
 
     public List<ResponseProductDTO> getList(List<Product> products) {

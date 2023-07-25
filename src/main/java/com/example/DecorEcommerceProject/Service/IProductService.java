@@ -21,6 +21,7 @@ public interface IProductService {
     List<ResponseProductDTO> getTopSold(int top);
     List<ResponseProductDTO> getAllTopSold(int top);
     Integer getTotalByCategoryId(Long Id);
+    List<ResponseProductDTO> getAllProductByRangeOfPrice(int bottom, int top, List<Product> products);
 //    List<ProductTopSellerDto> getTopSellerOfProduct(int topNumber);
 //    List<Book> getListBook_InOrder(String orderId);
 }

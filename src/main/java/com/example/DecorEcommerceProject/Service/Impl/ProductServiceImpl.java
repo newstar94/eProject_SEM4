@@ -54,7 +54,7 @@ public class ProductServiceImpl implements IProductService {
             product.setCategory(category);
         }
         productRepository.save(product);
-        if (extraImages.size() != 0 && !extraImages.get(0).getOriginalFilename().isEmpty()){
+        if (extraImages !=null) {
             try {
                 saveExtraImages(extraImages, product);
             } catch (Exception e) {
@@ -143,7 +143,7 @@ public class ProductServiceImpl implements IProductService {
                 throw new RuntimeException("Failed to upload main image");
             }
         }
-        if (extraImages.size() != 0 && !extraImages.get(0).getOriginalFilename().isEmpty()) {
+        if (extraImages != null) {
             try {
                 saveExtraImages(extraImages, existingProduct);
             } catch (Exception e) {

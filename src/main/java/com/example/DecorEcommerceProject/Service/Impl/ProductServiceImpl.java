@@ -44,6 +44,8 @@ public class ProductServiceImpl implements IProductService {
         product.setTotal_sold(0);
         String mainImageUrl = cloudinary.saveProductImageToCloudinary(imageFile);
         product.setMainImage(mainImageUrl);
+        product.setWeight(productDto.getWeight());
+        product.setDeliveryAvailable(productDto.isDeliveryAvailable());
         product.setCreatedAt(LocalDateTime.now());
         long categoryId = productDto.getCategory();
         if (categoryId != 0) {
@@ -67,13 +69,13 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ResponseProductDTO> getRandomAmountOfProducts(int size) {
+    public List<ResponseProductDTO> getRandomAmountOfProducts() {
         List<Product> productList = productRepository.findAll();
         if (productList.isEmpty()) {
             throw new EntityNotFoundException("Couldn't find any product in DB");
         }
         Collections.shuffle(productList);
-        List<Product> randomProducts = productList.subList(0, size);
+        List<Product> randomProducts = productList.subList(0, 5);
         return getList(randomProducts);
     }
 
@@ -112,8 +114,10 @@ public class ProductServiceImpl implements IProductService {
         existingProduct.setName(productDto.getName());
         existingProduct.setDescription(productDto.getDescription());
         existingProduct.setInventory(productDto.getInventory());
-        existingProduct.setStatus(ProductStatus.AVAILABLE);
+        existingProduct.setStatus(productDto.getProductStatus());
         existingProduct.setPrice(productDto.getPrice());
+        existingProduct.setDeliveryAvailable(productDto.isDeliveryAvailable());
+        existingProduct.setWeight(productDto.getWeight());
         existingProduct.setUpdatedAt(LocalDateTime.now());
         long categoryId = productDto.getCategory();
         if (categoryId != 0) {
@@ -146,6 +150,17 @@ public class ProductServiceImpl implements IProductService {
         return existingProduct;
     }
 
+    private void deleteProductImages(Product product) {
+        List<ProductImage> productImages = product.getImages();
+        if (productImages != null && !productImages.isEmpty()) {
+            for (ProductImage productImage : productImages) {
+                // Delete the image from Cloudinary
+                cloudinary.deleteProductImageFromCloudinary(productImage.getImageUrl());
+            }
+            productImageRepository.deleteByProductId(product.getId());
+        }
+    }
+
     private void saveExtraImages(List<MultipartFile> extraImages, Product product) {
         List<String> extraImageUrls = new ArrayList<>();
         for (MultipartFile extraImageFile : extraImages) {
@@ -162,17 +177,6 @@ public class ProductServiceImpl implements IProductService {
         String mainImage = product.getMainImage();
         if (mainImage != null && !mainImage.isEmpty()) {
             cloudinary.deleteProductImageFromCloudinary(mainImage);
-        }
-    }
-
-    private void deleteProductImages(Product product) {
-        List<ProductImage> productImages = product.getImages();
-        if (productImages != null && !productImages.isEmpty()) {
-            for (ProductImage productImage : productImages) {
-                // Delete the image from Cloudinary
-                cloudinary.deleteProductImageFromCloudinary(productImage.getImageUrl());
-            }
-            productImageRepository.deleteByProductId(product.getId());
         }
     }
 

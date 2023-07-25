@@ -10,7 +10,7 @@ import java.util.List;
 public interface IProductService {
     Product createProduct(ProductDto productDto, MultipartFile imageFile, List<MultipartFile> extraImages);
     List<ResponseProductDTO> getAllProducts();
-    List<ResponseProductDTO> getRandomAmountOfProducts(int size );
+    List<ResponseProductDTO> getRandomAmountOfProducts();
     List<ResponseProductDTO> getAllProductByCategoryID(Long cateID);
     ResponseProductDTO getProductByID(long id);
     String deleteProduct(Long id);

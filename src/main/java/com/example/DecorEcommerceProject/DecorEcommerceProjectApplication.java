@@ -76,6 +76,7 @@ public class DecorEcommerceProjectApplication {
             User user = new User();
             user.setUsername("ADMIN");
             user.setPassword(passwordEncoder.encode("123456"));
+            user.setPhone("0912345678");
             user.setName("ADMIN");
             user.setEmail("admin@admin.com");
             Role roles = roleRepository.findByName("ADMIN");

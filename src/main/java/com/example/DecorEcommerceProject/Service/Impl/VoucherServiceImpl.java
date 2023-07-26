@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import com.example.DecorEcommerceProject.Entities.Voucher;
 import com.example.DecorEcommerceProject.Service.IVoucherService;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,11 +22,13 @@ public class VoucherServiceImpl implements IVoucherService {
     private final VoucherRepository voucherRepository;
     private final VoucherUserRepository voucherUserRepository;
     private final UserRepository userRepository;
+    private final EmailServiceImpl emailService;
 
-    public VoucherServiceImpl(VoucherRepository voucherRepository, VoucherUserRepository voucherUserRepository, UserRepository userRepository) {
+    public VoucherServiceImpl(VoucherRepository voucherRepository, VoucherUserRepository voucherUserRepository, UserRepository userRepository, EmailServiceImpl emailService) {
         this.voucherRepository = voucherRepository;
         this.voucherUserRepository = voucherUserRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -57,17 +61,31 @@ public class VoucherServiceImpl implements IVoucherService {
             throw new Exception("Can not create voucher");
         }
         Voucher createdVoucher = voucherRepository.save(voucherDTO.getVoucher());
-        return saveVoucherUser(voucherDTO, createdVoucher);
+        List<User> list = voucherDTO.getUsers();
+        List<User> users = new ArrayList<>();
+        for (User user : list) {
+            User newUser = userRepository.findById(user.getId()).get();
+            users.add(newUser);
+        }
+        return saveVoucherUser(users, createdVoucher);
     }
 
-    private Voucher saveVoucherUser(VoucherDTO voucherDTO, Voucher voucher) {
-        if (!voucherDTO.getUsers().isEmpty()) {
-            List<User> users = voucherDTO.getUsers();
+    private Voucher saveVoucherUser(List<User> users, Voucher voucher) throws MessagingException {
+        if (!users.isEmpty()) {
             for (User user : users) {
                 VoucherUser voucherUser = new VoucherUser();
                 voucherUser.setUser(user);
                 voucherUser.setVoucher(voucher);
                 voucherUser.setUsed(false);
+                String to = user.getEmail();
+                String subject = "Voucher dành cho bạn";
+                String content = "<h2>Xin chào " + user.getName() + "</h2>" +
+                        "<p>Nhằm tri ân những khách hàng thân yêu của chúng tôi. Chúng tôi xin gửi tới bạn một voucher</p>" +
+                        "<p>Mã voucher: " + voucher.getCode() + " </p>" +
+                        "<p>Giảm giá: " + voucher.getPercentage() + "%. Tối đa: " + voucher.getAmountMax() + "</p>" +
+                        "<p>Bắt đầu: " + voucher.getStart() + "</p>" +
+                        "<p>Kết thúc: " + voucher.getEnd() + "</p>";
+                emailService.sendEmail(to, subject, content);
                 voucherUserRepository.save(voucherUser);
             }
         }

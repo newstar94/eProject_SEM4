@@ -4,6 +4,9 @@ import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
 import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Product;
 import com.example.DecorEcommerceProject.Service.IProductService;
+import com.example.DecorEcommerceProject.Service.Impl.ProductServiceImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,19 +19,32 @@ import java.util.List;
 @RequestMapping("/api/products")
 public class ProductsController {
     private final IProductService productService;
-
-    public ProductsController(IProductService productService) {
+    public ProductsController(IProductService productService){
         this.productService = productService;
+    }
+    @GetMapping("/admin/products/page")
+    public ResponseEntity<List<ResponseProductDTO>> listProductsByPage(@RequestParam(defaultValue = "1") int currentPage,
+                                                 @RequestParam(defaultValue = "10") int itemsPerPage,
+                                                 @RequestParam(defaultValue = "createdAt") String sortField,
+                                                 @RequestParam(defaultValue = "desc") String sortDir,
+                                                 @RequestParam(required = false) String keyword,
+                                                 @RequestParam(required = false) Long categoryId) {
+        long categoryIdValue = (categoryId != null) ? categoryId.longValue() : 0L;
+        List page = productService.listByPage(currentPage,itemsPerPage, sortField, sortDir, keyword, categoryIdValue);
+
+//        List<ResponseProductDTO> productList = page.getContent();
+
+
+        return ResponseEntity.status(HttpStatus.OK).body(page);
     }
 
     @GetMapping()
     public ResponseEntity<?> getAllProducts() {
-        if (productService.getAllProducts().size() == 0) {
+        if (productService.getAllProducts().size()==0){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List product is empty!");
         }
         return ResponseEntity.status(HttpStatus.OK).body(productService.getAllProducts());
     }
-
     @GetMapping("index")
     public ResponseEntity<?> getRandomAmountOfProductsIndex() {
         return ResponseEntity.status(HttpStatus.OK).body(productService.getRandomAmountOfProducts());
@@ -42,7 +58,6 @@ public class ProductsController {
             return ResponseEntity.ok().body(productService.getAllProductsByKeyword(keyword));
         }
     }
-
     @GetMapping("/product/{id}")
     public ResponseEntity<?> getProductByID(@PathVariable Long id) {
         if (productService.getProductByID(id) == null) {
@@ -56,7 +71,7 @@ public class ProductsController {
     public ResponseEntity<?> getProductByCateID(@PathVariable Long cateId) {
         if (productService.getAllProductByCategoryID(cateId) == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List products is empty!");
-        } else {
+        }else{
             return ResponseEntity.ok().body(productService.getAllProductByCategoryID(cateId));
         }
     }
@@ -66,29 +81,26 @@ public class ProductsController {
                                                            @RequestParam("keyword") String keyword) {
         if (productService.getAllProductByCateIDAndKeyword(cateID, keyword) == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List products is empty!");
-        } else {
+        }else{
             return ResponseEntity.ok().body(productService.getAllProductByCateIDAndKeyword(cateID, keyword));
         }
     }
-
     @PostMapping
     public ResponseEntity<?> createProduct(@ModelAttribute ProductDto productDto,
                                            @RequestParam("imageFile") MultipartFile mainImageMultipart,
                                            @RequestParam("extraImages") List<MultipartFile> extraImagesMultipart
     ) {
         try {
-            Product newProduct = productService.createProduct(productDto, mainImageMultipart, extraImagesMultipart);
+            Product newProduct = productService.createProduct(productDto, mainImageMultipart,extraImagesMultipart);
             return ResponseEntity.status(HttpStatus.CREATED).body(newProduct);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         return ResponseEntity.ok(productService.deleteProduct(id));
     }
-
     @PutMapping("/save/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id,
                                            @ModelAttribute ProductDto productDto,
@@ -97,7 +109,7 @@ public class ProductsController {
         try {
             Product updatedProduct = productService.updateProduct(id, productDto, mainImageFile, extraImages);
             return ResponseEntity.ok(updatedProduct);
-        } catch (Exception e) {
+        } catch (Exception e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
@@ -117,26 +129,13 @@ public class ProductsController {
         List<ResponseProductDTO> topSold = productService.getTopSold(top);
         return ResponseEntity.ok(topSold);
     }
-
     @GetMapping("/all-top-sold") //for admin
     public ResponseEntity<?> getAllTopSold(@RequestParam("top") int top) {
         List<ResponseProductDTO> topSold = productService.getAllTopSold(top);
         return ResponseEntity.ok(topSold);
     }
-
     @GetMapping("/total/{Id}")
-    public ResponseEntity<?> totalByCategoryId(@PathVariable Long Id) {
+    public ResponseEntity<?> totalByCategoryId(@PathVariable Long Id){
         return ResponseEntity.ok(productService.getTotalByCategoryId(Id));
-    }
-
-    @PostMapping("/get-by-price")
-    public ResponseEntity<?> getByPrice(@RequestParam("bottom") int bottom,
-                                        @RequestParam("top") int top,
-                                        @RequestBody List<Product> products) {
-        List<ResponseProductDTO> list = productService.getAllProductByRangeOfPrice(bottom, top, products);
-        if (list.size() != 0) {
-            return ResponseEntity.ok(list);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not found!");
     }
 }

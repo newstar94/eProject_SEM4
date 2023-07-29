@@ -91,7 +91,7 @@ public class OrderController {
             @RequestParam(value = "vnp_TmnCode") String vnp_TmnCode,
             @RequestParam(value = "vnp_Amount") String vnp_Amount,
             @RequestParam(value = "vnp_BankCode") String vnp_BankCode,
-            @RequestParam(value = "vnp_BankTranNo") String vnp_BankTranNo,
+            @RequestParam(value = "vnp_BankTranNo", required = false) String vnp_BankTranNo,
             @RequestParam(value = "vnp_CardType") String vnp_CardType,
             @RequestParam(value = "vnp_PayDate") String vnp_PayDate,
             @RequestParam(value = "vnp_OrderInfo") String vnp_OrderInfo,
@@ -101,7 +101,12 @@ public class OrderController {
             @RequestParam(value = "vnp_TxnRef") String vnp_TxnRef,
             @RequestParam(value = "vnp_SecureHash") String vnp_SecureHash
     ) throws IOException {
-        return ResponseEntity.status(HttpStatus.OK).body(paymentService.getResult(vnp_TmnCode, vnp_Amount, vnp_BankCode, vnp_BankTranNo, vnp_CardType, vnp_PayDate, vnp_OrderInfo, vnp_TransactionNo, vnp_ResponseCode, vnp_TransactionStatus, vnp_TxnRef, vnp_SecureHash));
+        if (vnp_BankTranNo != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(paymentService.getResult(vnp_TmnCode, vnp_Amount, vnp_BankCode, vnp_BankTranNo, vnp_CardType, vnp_PayDate, vnp_OrderInfo, vnp_TransactionNo, vnp_ResponseCode, vnp_TransactionStatus, vnp_TxnRef, vnp_SecureHash));
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(paymentService.getResult(vnp_TmnCode, vnp_Amount, vnp_BankCode, "", vnp_CardType, vnp_PayDate, vnp_OrderInfo, vnp_TransactionNo, vnp_ResponseCode, vnp_TransactionStatus, vnp_TxnRef, vnp_SecureHash));
+        }
+
     }
 
     @GetMapping("/{id}")
@@ -139,9 +144,9 @@ public class OrderController {
     }
 
     @PutMapping("/cancel/{id}") //for user
-    public ResponseEntity<?> cancelOrder(@PathVariable Long id,HttpServletRequest request) {
+    public ResponseEntity<?> cancelOrder(@PathVariable Long id, HttpServletRequest request) {
         try {
-            Order updatedOrder = orderService.cancelOrder(id,request);
+            Order updatedOrder = orderService.cancelOrder(id, request);
             if (updatedOrder != null) {
                 return ResponseEntity.ok().body(updatedOrder);
             } else {
@@ -187,9 +192,9 @@ public class OrderController {
     }
 
     @PutMapping("/accept_return/{id}") //for admin
-    public ResponseEntity<?> acceptReturnOrder(@PathVariable Long id,HttpServletRequest request) {
+    public ResponseEntity<?> acceptReturnOrder(@PathVariable Long id, HttpServletRequest request) {
         try {
-            Order updatedOrder = orderService.acceptReturnOrder(id,request);
+            Order updatedOrder = orderService.acceptReturnOrder(id, request);
             if (updatedOrder != null) {
                 return ResponseEntity.ok().body(updatedOrder);
             } else {

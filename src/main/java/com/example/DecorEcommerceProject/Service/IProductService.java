@@ -3,8 +3,6 @@ package com.example.DecorEcommerceProject.Service;
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
 import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Product;
-import com.example.DecorEcommerceProject.Exception.NotFoundException;
-import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

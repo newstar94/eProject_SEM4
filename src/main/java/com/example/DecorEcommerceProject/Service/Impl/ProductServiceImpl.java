@@ -4,7 +4,6 @@ import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
 import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.ProductStatus;
-import com.example.DecorEcommerceProject.Entities.VM.Paging;
 import com.example.DecorEcommerceProject.Repositories.CategoryRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductImageRepository;
 import com.example.DecorEcommerceProject.Repositories.ProductRepository;
@@ -24,7 +23,6 @@ public class ProductServiceImpl implements IProductService {
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
     private final CloudinaryService cloudinary;
-    public static final int PRODUCTS_PER_PAGE = 10;
 
     public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository,
                               ProductImageRepository productImageRepository,
@@ -74,7 +72,7 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<?> listByPage(int currentPage,int itemsPerPage, String sortField, String sortDir, String keyword, long categoryId) {
+    public List<?> listByPage(int currentPage, int itemsPerPage, String sortField, String sortDir, String keyword, long categoryId) {
         Sort sort = Sort.by(sortField);
 //        sort = sortDir.equals("dsc") ? sort.descending() : sort.ascending();
         List<Product> productList = productRepository.findAll();
@@ -84,29 +82,29 @@ public class ProductServiceImpl implements IProductService {
         if (currentPage < 1 || currentPage > totalPages) {
             throw new IllegalArgumentException("Invalid Page");
         }
-        int startCount  = (currentPage - 1) * itemsPerPage + 1;
-        int endCount  = Math.min(startCount  + itemsPerPage, totalProducts) - 1;
-        List<Product> productsInPage = productList.subList(startCount, endCount );
-        if (sort.equals(sortField)) {
-            if ("desc".equalsIgnoreCase(sortDir)) {
-                productsInPage.sort(Comparator.comparing(Product::getCreatedAt).reversed());
-            } else {
-                productsInPage.sort(Comparator.comparing(Product::getCreatedAt));
-            }
+        int startCount = (currentPage - 1) * itemsPerPage;
+        int endCount = Math.min(startCount + itemsPerPage, totalProducts);
+        List<Product> productsInPage = productList.subList(startCount, endCount);
+
+        if ("desc".equalsIgnoreCase(sortDir)) {
+            productsInPage.sort(Comparator.comparing(Product::getCreatedAt).reversed());
+        } else {
+            productsInPage.sort(Comparator.comparing(Product::getCreatedAt));
         }
+
         Pageable pageable = PageRequest.of(currentPage - 1, itemsPerPage, sort);
         if (keyword != null && !keyword.isEmpty()) {
-            if (categoryId != 0 && categoryId > 0) {
-                 productRepository.searchInCategory(categoryId, keyword, pageable);
+            if (categoryId > 0) {
+                productRepository.searchInCategory(categoryId, keyword, pageable);
             }
-             productRepository.findAllProducts(keyword, pageable);
+            productRepository.findAllProducts(keyword, pageable);
 
-        }else {
-             productRepository.findAll(pageable);
+        } else {
+            productRepository.findAll(pageable);
         }
 
-        if (categoryId != 0 && categoryId > 0) {
-             productRepository.findAllInCategory(categoryId, pageable);
+        if (categoryId > 0) {
+            productRepository.findAllInCategory(categoryId, pageable);
         }
 
         Page<Product> page = new PageImpl<>(productsInPage, PageRequest.of(currentPage - 1, itemsPerPage), totalProducts);
@@ -179,7 +177,6 @@ public class ProductServiceImpl implements IProductService {
         }
         if (mainImageFile != null && !mainImageFile.isEmpty()) {
             try {
-
                 String mainImageUrl = cloudinary.saveProductImageToCloudinary(mainImageFile);
                 deleteMainImage(existingProduct);
                 existingProduct.setMainImage(mainImageUrl);
@@ -298,7 +295,7 @@ public class ProductServiceImpl implements IProductService {
     private void getResponseProductDTO(Product product, ResponseProductDTO responseProductDTO) {
         responseProductDTO.setProduct(product);
         List<DiscountHistory> discountHistories = product.getDiscountHistories();
-        if (discountHistories.size() == 0) {
+        if (discountHistories.isEmpty()) {
             responseProductDTO.setPrice_discount(product.getPrice());
         }
         for (DiscountHistory discountHistory : discountHistories) {

@@ -67,7 +67,7 @@ public class PaymentServiceImpl implements IPaymentService {
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang: " + vnp_TxnRef);
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", adminConfig.getVnp_ReturnUrl());
         vnp_Params.put("vnp_OrderType", "other");
@@ -133,7 +133,9 @@ public class PaymentServiceImpl implements IPaymentService {
         fields.put("vnp_TmnCode", URLEncoder.encode(vnp_TmnCode, StandardCharsets.US_ASCII.toString()));
         fields.put("vnp_Amount", URLEncoder.encode(vnp_Amount, StandardCharsets.US_ASCII.toString()));
         fields.put("vnp_BankCode", URLEncoder.encode(vnp_BankCode, StandardCharsets.US_ASCII.toString()));
-        fields.put("vnp_BankTranNo", URLEncoder.encode(vnp_BankTranNo, StandardCharsets.US_ASCII.toString()));
+        if (!vnp_BankTranNo.isEmpty()){
+            fields.put("vnp_BankTranNo", URLEncoder.encode(vnp_BankTranNo, StandardCharsets.US_ASCII.toString()));
+        }
         fields.put("vnp_CardType", URLEncoder.encode(vnp_CardType, StandardCharsets.US_ASCII.toString()));
         fields.put("vnp_PayDate", URLEncoder.encode(vnp_PayDate, StandardCharsets.US_ASCII.toString()));
         fields.put("vnp_OrderInfo", URLEncoder.encode(vnp_OrderInfo, StandardCharsets.US_ASCII.toString()));
@@ -161,17 +163,17 @@ public class PaymentServiceImpl implements IPaymentService {
                 order = orderRepository.save(order);
                 paymentResultsDTO.setOrder(order);
                 responseObject.setStatus("Ok");
-                responseObject.setMessage("Payment Success");
+                responseObject.setMessage("Payment Success!");
                 responseObject.setData(paymentResultsDTO);
             } else {
                 paymentResultsDTO.setOrder(order);
-                responseObject.setStatus("Error");
-                responseObject.setMessage("Error");
+                responseObject.setStatus("Error!");
+                responseObject.setMessage("Payment not success!");
                 responseObject.setData(paymentResultsDTO);
             }
             return responseObject;
         }
-        responseObject.setStatus("Error");
+        responseObject.setStatus("Error!");
         responseObject.setMessage("Sign not valid!");
         responseObject.setData(null);
         return responseObject;

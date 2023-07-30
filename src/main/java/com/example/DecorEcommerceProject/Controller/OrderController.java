@@ -86,7 +86,7 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/result")
+    @PostMapping("/result")
     public ResponseEntity<?> result(
             @RequestParam(value = "vnp_TmnCode") String vnp_TmnCode,
             @RequestParam(value = "vnp_Amount") String vnp_Amount,

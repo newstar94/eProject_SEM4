@@ -85,7 +85,7 @@ public class OrderServiceImpl implements IOrderService {
                     .orElseThrow(() -> new EntityNotFoundException("Not found product with id: " + orderItemDTO.getProductId()));
             orderItem.setProduct(product);
             List<DiscountHistory> discountHistories = product.getDiscountHistories();
-            if (discountHistories.size() == 0) {
+            if (discountHistories.isEmpty()) {
                 orderItem.setPrice(product.getPrice());
             }
             for (DiscountHistory discountHistory : discountHistories) {
@@ -162,6 +162,7 @@ public class OrderServiceImpl implements IOrderService {
         GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         MapApiHandler mapApiHandler = new MapApiHandler(adminConfigRepository);
         Order order = new Order();
+        order.setUser(userRepository.findById(orderDTO.getUser().getId()).get());
         setDeliveryAddress(orderDTO, order);
         List<OrderItem> orderItems = new ArrayList<>();
         for (OrderItemDTO orderItemDTO : orderDTO.getOrderItemDTOS()) {
@@ -170,7 +171,7 @@ public class OrderServiceImpl implements IOrderService {
                     .orElseThrow(() -> new EntityNotFoundException("Not found product with id: " + orderItemDTO.getProductId()));
             orderItem.setProduct(product);
             List<DiscountHistory> discountHistories = product.getDiscountHistories();
-            if (discountHistories.size() == 0) {
+            if (discountHistories.isEmpty()) {
                 orderItem.setPrice(product.getPrice());
             }
             for (DiscountHistory discountHistory : discountHistories) {
@@ -210,7 +211,7 @@ public class OrderServiceImpl implements IOrderService {
         }
 
         if (orderDTO.getVoucherCode() != null && !orderDTO.getVoucherCode().isEmpty()) {
-            if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), orderDTO.getUser().getUsername())) {
+            if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), order.getUser().getUsername())) {
                 Voucher voucher = voucherRepository.findByCode(orderDTO.getVoucherCode());
                 voucher_discount = (int) Math.min(amount - (amount * voucher.getPercentage() / 100), voucher.getAmountMax());
                 order.setVoucher_discount(voucher_discount);

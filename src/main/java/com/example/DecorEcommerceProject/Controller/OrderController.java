@@ -1,5 +1,6 @@
 package com.example.DecorEcommerceProject.Controller;
 
+import com.example.DecorEcommerceProject.ResponseAPI.ResponseObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -12,6 +13,7 @@ import com.example.DecorEcommerceProject.Service.IPaymentService;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/order")
@@ -87,26 +89,24 @@ public class OrderController {
     }
 
     @PostMapping("/result")
-    public ResponseEntity<?> result(
-            @RequestParam(value = "vnp_TmnCode") String vnp_TmnCode,
-            @RequestParam(value = "vnp_Amount") String vnp_Amount,
-            @RequestParam(value = "vnp_BankCode") String vnp_BankCode,
-            @RequestParam(value = "vnp_BankTranNo", required = false) String vnp_BankTranNo,
-            @RequestParam(value = "vnp_CardType") String vnp_CardType,
-            @RequestParam(value = "vnp_PayDate") String vnp_PayDate,
-            @RequestParam(value = "vnp_OrderInfo") String vnp_OrderInfo,
-            @RequestParam(value = "vnp_TransactionNo") String vnp_TransactionNo,
-            @RequestParam(value = "vnp_ResponseCode") String vnp_ResponseCode,
-            @RequestParam(value = "vnp_TransactionStatus") String vnp_TransactionStatus,
-            @RequestParam(value = "vnp_TxnRef") String vnp_TxnRef,
-            @RequestParam(value = "vnp_SecureHash") String vnp_SecureHash
-    ) throws IOException {
+    public ResponseEntity<?> result(@RequestBody Map<String, String> request) throws IOException {
+        String vnp_TmnCode = request.get("vnp_TmnCode");
+        String vnp_Amount = request.get("vnp_Amount");
+        String vnp_BankCode = request.get("vnp_BankCode");
+        String vnp_BankTranNo = request.get("vnp_BankTranNo");
+        String vnp_CardType = request.get("vnp_CardType");
+        String vnp_PayDate = request.get("vnp_PayDate");
+        String vnp_OrderInfo = request.get("vnp_OrderInfo");
+        String vnp_TransactionNo = request.get("vnp_TransactionNo");
+        String vnp_ResponseCode = request.get("vnp_ResponseCode");
+        String vnp_TransactionStatus = request.get("vnp_TransactionStatus");
+        String vnp_TxnRef = request.get("vnp_TxnRef");
+        String vnp_SecureHash = request.get("vnp_SecureHash");
         if (vnp_BankTranNo != null) {
             return ResponseEntity.status(HttpStatus.OK).body(paymentService.getResult(vnp_TmnCode, vnp_Amount, vnp_BankCode, vnp_BankTranNo, vnp_CardType, vnp_PayDate, vnp_OrderInfo, vnp_TransactionNo, vnp_ResponseCode, vnp_TransactionStatus, vnp_TxnRef, vnp_SecureHash));
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(paymentService.getResult(vnp_TmnCode, vnp_Amount, vnp_BankCode, "", vnp_CardType, vnp_PayDate, vnp_OrderInfo, vnp_TransactionNo, vnp_ResponseCode, vnp_TransactionStatus, vnp_TxnRef, vnp_SecureHash));
         }
-
     }
 
     @GetMapping("/{id}")

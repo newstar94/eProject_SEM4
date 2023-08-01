@@ -50,7 +50,7 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/checkout") //trước bước tến hành đặt hàng, để hiện thị thông tin giá
+    @PostMapping("/checkout") //trước bước tến hành đặt hàng, để hiện thị thông tin giá
     public ResponseEntity<?> checkoutOrder(@Validated @RequestBody OrderDTO orderDTO) {
         try {
             Object order = orderService.checkoutOrder(orderDTO);

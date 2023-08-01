@@ -61,7 +61,8 @@ public class UsersController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String token = jwtGenerator.generateToken(authentication);
             String username = userService.findUserByPhone(model.getPhone()).getUsername();
-            AuthResponseDto responseDto = new AuthResponseDto(username, token);
+            Long id = userService.findUserByPhone(model.getPhone()).getId();
+            AuthResponseDto responseDto = new AuthResponseDto(id, username, token);
             return ResponseEntity.ok(responseDto);
         } catch (AuthenticationException e) {
             String errorMessage = "Invalid phone number or password";

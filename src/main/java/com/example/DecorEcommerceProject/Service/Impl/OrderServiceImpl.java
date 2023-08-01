@@ -27,7 +27,6 @@ import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
 import com.example.DecorEcommerceProject.Service.IOrderService;
-
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
@@ -277,7 +276,8 @@ public class OrderServiceImpl implements IOrderService {
 
         }
         if (amount - voucher_discount >= adminConfig.getAmount_to_free()) {
-            order.setDeliveryFee(0);
+            deliveryFee = 0;
+            order.setDeliveryFee(deliveryFee);
         } else {
             order.setDeliveryFee(deliveryFee);
         }

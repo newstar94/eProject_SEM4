@@ -1,7 +1,6 @@
 package com.example.DecorEcommerceProject;
 
 import com.example.DecorEcommerceProject.Entities.AdminConfig;
-import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Entities.Role;
 import com.example.DecorEcommerceProject.Entities.User;
 import com.example.DecorEcommerceProject.Repositories.AdminConfigRepository;
@@ -13,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,7 +40,7 @@ public class DecorEcommerceProjectApplication {
             AdminConfig adminConfig = new AdminConfig();
             adminConfig.setVnp_apiUrl("https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
             adminConfig.setVnp_PayUrl("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
-            adminConfig.setVnp_ReturnUrl("http://localhost:9090/api/order/result");
+            adminConfig.setVnp_ReturnUrl("http://localhost:5173/order/payment");
             adminConfig.setVnp_TmnCode("NVWUQGML");
             adminConfig.setVnp_HashSecret("VJVDYZJTDGQAZGAJUQRZAVKMEZEECJJM");
             adminConfig.setDelivery_fee(40000);

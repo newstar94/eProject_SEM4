@@ -36,6 +36,11 @@ public class DeliveryAddressServiceImpl implements IDeliveryAddressService {
     }
 
     @Override
+    public DeliveryAddress getDeliveryAddressById(Long Id) {
+        return deliveryAddressRepository.findById(Id).get();
+    }
+
+    @Override
     public List<DeliveryAddress> getAllDeliveryAddressByUserId(Long Id) {
         return deliveryAddressRepository.getAllDeliveryAddressByUserId(Id);
     }

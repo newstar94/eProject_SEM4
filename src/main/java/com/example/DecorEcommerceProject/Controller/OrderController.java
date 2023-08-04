@@ -1,12 +1,6 @@
 package com.example.DecorEcommerceProject.Controller;
 
-import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
-import com.example.DecorEcommerceProject.Entities.DeliveryAddress;
-import com.example.DecorEcommerceProject.Entities.Enum.DeliveryType;
-import com.example.DecorEcommerceProject.Entities.Enum.PaymentType;
-import com.example.DecorEcommerceProject.Entities.User;
-import com.example.DecorEcommerceProject.Service.IDeliveryAddressService;
-import com.example.DecorEcommerceProject.Service.IUserService;
+import com.example.DecorEcommerceProject.ResponseAPI.ResponseObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,8 +13,6 @@ import com.example.DecorEcommerceProject.Service.IPaymentService;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -28,14 +20,10 @@ import java.util.Map;
 public class OrderController {
     private final IOrderService orderService;
     private final IPaymentService paymentService;
-    private final IUserService userService;
-    private final IDeliveryAddressService deliveryAddressService;
 
-    public OrderController(IOrderService orderService, IPaymentService paymentService, IUserService userService, IDeliveryAddressService deliveryAddressService) {
+    public OrderController(IOrderService orderService, IPaymentService paymentService) {
         this.orderService = orderService;
         this.paymentService = paymentService;
-        this.userService = userService;
-        this.deliveryAddressService = deliveryAddressService;
     }
 
     @GetMapping("/all")
@@ -64,33 +52,9 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/checkout")
-    public ResponseEntity<?> checkoutOrder(@RequestParam(name = "paymentType") PaymentType paymentType,
-                                           @RequestParam(name = "deliveryType") DeliveryType deliveryType,
-                                           @RequestParam(name = "voucherCode", required = false) String voucherCode,
-                                           @RequestParam(name = "deliveryAddressId") Long deliveryAddressId,
-                                           @RequestParam(name = "userId") Long userId,
-                                           @RequestParam("productId") List<Long> productIds,
-                                           @RequestParam("quantity") List<Integer> quantities) {
+    @PostMapping("/checkout") //trước bước tến hành đặt hàng, để hiện thị thông tin giá
+    public ResponseEntity<?> checkoutOrder(@Validated @RequestBody OrderDTO orderDTO) {
         try {
-            List<OrderItemDTO> orderItemDTOs = new ArrayList<>();
-            for (int i = 0; i < productIds.size(); i++) {
-                Long productId = productIds.get(i);
-                int quantity = quantities.get(i);
-                OrderItemDTO orderItemDTO = new OrderItemDTO();
-                orderItemDTO.setProductId(productId);
-                orderItemDTO.setQuantity(quantity);
-                orderItemDTOs.add(orderItemDTO);
-            }
-            OrderDTO orderDTO = new OrderDTO();
-            orderDTO.setPaymentType(paymentType);
-            orderDTO.setDeliveryType(deliveryType);
-            orderDTO.setVoucherCode(voucherCode);
-            DeliveryAddress deliveryAddress = deliveryAddressService.getDeliveryAddressById(deliveryAddressId);
-            orderDTO.setDeliveryAddress(deliveryAddress);
-            User user = userService.getUserById(userId);
-            orderDTO.setUser(user);
-            orderDTO.setOrderItemDTOS(orderItemDTOs);
             Object order = orderService.checkoutOrder(orderDTO);
             return ResponseEntity.ok(order);
         } catch (Exception e) {

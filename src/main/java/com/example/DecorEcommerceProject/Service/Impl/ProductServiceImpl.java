@@ -72,45 +72,50 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<?> listByPage(int currentPage, int itemsPerPage, String sortField, String sortDir, String keyword, long categoryId) {
-        Sort sort = Sort.by(sortField);
-//        sort = sortDir.equals("dsc") ? sort.descending() : sort.ascending();
-        List<Product> productList = productRepository.findAll();
+    public Page<?> listByPage(int currentPage,int itemsPerPage) {
+        List<Product> products = productRepository.findAll();
+        List<ResponseProductDTO> productList = getList(products);
         int totalProducts = productList.size();
         int totalPages = (int) Math.ceil((double) totalProducts / itemsPerPage);
 
         if (currentPage < 1 || currentPage > totalPages) {
             throw new IllegalArgumentException("Invalid Page");
         }
-        int startCount = (currentPage - 1) * itemsPerPage;
-        int endCount = Math.min(startCount + itemsPerPage, totalProducts);
-        List<Product> productsInPage = productList.subList(startCount, endCount);
+        int startCount  = (currentPage - 1) * itemsPerPage ;
+        int endCount  = startCount  + itemsPerPage ;
+        List<ResponseProductDTO> productsInPage = productList.subList(startCount, endCount );
 
-        if ("desc".equalsIgnoreCase(sortDir)) {
-            productsInPage.sort(Comparator.comparing(Product::getCreatedAt).reversed());
-        } else {
-            productsInPage.sort(Comparator.comparing(Product::getCreatedAt));
-        }
-
-        Pageable pageable = PageRequest.of(currentPage - 1, itemsPerPage, sort);
-        if (keyword != null && !keyword.isEmpty()) {
-            if (categoryId > 0) {
-                productRepository.searchInCategory(categoryId, keyword, pageable);
-            }
-            productRepository.findAllProducts(keyword, pageable);
-
-        } else {
-            productRepository.findAll(pageable);
-        }
-
-        if (categoryId > 0) {
-            productRepository.findAllInCategory(categoryId, pageable);
-        }
-
-        Page<Product> page = new PageImpl<>(productsInPage, PageRequest.of(currentPage - 1, itemsPerPage), totalProducts);
-        List<Product> productDtoByPage = page.getContent();
-        return getList(productDtoByPage);
+        Page<ResponseProductDTO> page = new PageImpl<>(productsInPage, PageRequest.of(currentPage - 1, itemsPerPage), totalProducts);
+        return page;
     }
+
+
+//    @Override
+//    public Page<ResponseProductDTO> listByPage(int currentPage, int itemsPerPage, String sortField, String sortDir, List<Product> productList) {
+//        Sort sort = Sort.by(sortField);
+////        sort = sortDir.equals("dsc") ? sort.descending() : sort.ascending();
+//        int totalProducts = productList.size();
+//        int totalPages = (int) Math.ceil((double) totalProducts / itemsPerPage);
+//
+//        if (currentPage < 1 || currentPage > totalPages) {
+//            throw new IllegalArgumentException("Invalid Page");
+//        }
+//        int startCount = (currentPage - 1) * itemsPerPage;
+//        int endCount = Math.min(startCount + itemsPerPage, totalProducts);
+//        List<Product> productsInPage = productList.subList(startCount, endCount);
+//
+//        if ("desc".equalsIgnoreCase(sortDir)) {
+//            productsInPage.sort(Comparator.comparing(Product::getCreatedAt).reversed());
+//        } else {
+//            productsInPage.sort(Comparator.comparing(Product::getCreatedAt));
+//        }
+//
+//        Pageable pageable = PageRequest.of(currentPage - 1, itemsPerPage, sort);
+//
+//        Page<Product> page = new PageImpl<ResponseProductDTO>(productsInPage, pageable, totalProducts);
+////        List<Product> productDtoByPage = page.getContent();
+//        return page;
+//    }
 
     @Override
     public List<ResponseProductDTO> getRandomAmountOfProducts() {
@@ -309,5 +314,6 @@ public class ProductServiceImpl implements IProductService {
             }
             responseProductDTO.setPrice_discount(product.getPrice());
         }
+
     }
 }

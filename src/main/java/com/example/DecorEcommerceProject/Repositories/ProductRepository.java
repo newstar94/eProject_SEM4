@@ -18,7 +18,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     )
     List<Product> getAllProductByCategoryID(Long cateId);
     @Query(
-            value = "SELECT * FROM  products p WHERE p.category.id = :categoryId ",
+            value = "SELECT * FROM  products  WHERE category_id = :categoryId ",
             nativeQuery = true
     )
     Page<ResponseProductDTO> findAllInCategory(long categoryId, Pageable pageable);

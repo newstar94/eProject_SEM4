@@ -4,6 +4,7 @@ import com.example.DecorEcommerceProject.Entities.DTO.ProductDto;
 import com.example.DecorEcommerceProject.Entities.DTO.ResponseProductDTO;
 import com.example.DecorEcommerceProject.Entities.Product;
 import com.example.DecorEcommerceProject.Service.IProductService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,18 +20,12 @@ public class ProductsController {
     public ProductsController(IProductService productService){
         this.productService = productService;
     }
+
+
     @GetMapping("/admin/products/page")
-    public ResponseEntity<List<ResponseProductDTO>> listProductsByPage(@RequestParam(defaultValue = "1") int currentPage,
-                                                 @RequestParam(defaultValue = "10") int itemsPerPage,
-                                                 @RequestParam(defaultValue = "createdAt") String sortField,
-                                                 @RequestParam(defaultValue = "desc") String sortDir,
-                                                 @RequestParam(required = false) String keyword,
-                                                 @RequestParam(required = false) Long categoryId) {
-        long categoryIdValue = (categoryId != null) ? categoryId.longValue() : 0L;
-        List page = productService.listByPage(currentPage,itemsPerPage, sortField, sortDir, keyword, categoryIdValue);
-
-//        List<ResponseProductDTO> productList = page.getContent();
-
+    public ResponseEntity<Page<?>> listProductsByPage(@RequestParam(defaultValue = "1") int currentPage,
+                                                      @RequestParam(defaultValue = "10") int itemsPerPage) {
+        Page page = productService.listByPage(currentPage,itemsPerPage);
 
         return ResponseEntity.status(HttpStatus.OK).body(page);
     }

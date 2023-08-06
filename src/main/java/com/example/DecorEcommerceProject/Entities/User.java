@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.List;
@@ -23,16 +24,17 @@ public class User {
     private String name;
     @Column(name = "username", nullable = false)
     private String username;
-    @Column( nullable = false)
+    @Column(nullable = false)
     @JsonIgnore
     private String password;
-    @Column( nullable = false)
+    @Column(nullable = false)
     private String email;
-//    @Column(unique = true, nullable = false)
+    //    @Column(unique = true, nullable = false)
     @Column
     private String phone;
-    @Column
-    private String address;
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    private List<DeliveryAddress> deliveryAddresses;
     @Column
     private Level level;
     @Column
@@ -40,9 +42,9 @@ public class User {
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Role> roles;
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private List<Order> orders;
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private List<VoucherUser> voucherUsers;
 }

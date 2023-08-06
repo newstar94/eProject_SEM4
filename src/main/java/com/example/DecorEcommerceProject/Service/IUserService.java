@@ -14,7 +14,7 @@ public interface IUserService {
     String addRoleToUser(String phone, String roleName);
 //    User registerUser(User user);
     User getUserById(Long id);
-    User getUser(String username);
+    User getByUserName(String username);
     User updateUser(Long id,User user);
     String deleteUser(Long id);
     List<User> getAllUsers();

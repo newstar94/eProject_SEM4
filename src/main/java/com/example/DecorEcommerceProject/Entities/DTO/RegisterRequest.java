@@ -1,5 +1,6 @@
 package com.example.DecorEcommerceProject.Entities.DTO;
 
+import com.example.DecorEcommerceProject.Entities.DeliveryAddress;
 import lombok.Data;
 
 @Data
@@ -10,5 +11,5 @@ public class RegisterRequest {
     private String confirmPassword;
     private String email;
     private String phone;
-    private String address;
+    private DeliveryAddress deliveryAddress;
 }

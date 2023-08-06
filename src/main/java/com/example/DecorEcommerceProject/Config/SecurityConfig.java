@@ -57,6 +57,8 @@ public class SecurityConfig {
 //            "/api/products/add"
 //    };
     private static final String[] ALLOW_USER_URLS = {
+    };
+    private static final String[] ALLOW_ADMIN_USER_URLS = {
             "/api/users/{id}",
     };
     private static final String[] ALLOW_ADMIN_URLS = {
@@ -76,7 +78,6 @@ public class SecurityConfig {
 
             //User
             "/api/users",
-            "/api/users/{id}",
             "/api/users/get-by-level"
     };
 
@@ -91,7 +92,9 @@ public class SecurityConfig {
 
         http.authorizeRequests().antMatchers(ALLOW_ALL_URLS).permitAll();
         http.authorizeRequests().antMatchers(ALLOW_USER_URLS).hasRole("USER");
-        http.authorizeRequests().antMatchers(ALLOW_ADMIN_URLS).hasAnyAuthority("ADMIN");
+        http.authorizeRequests().antMatchers(ALLOW_ADMIN_URLS).hasRole("ADMIN");
+        http.authorizeRequests().antMatchers(ALLOW_ADMIN_USER_URLS).hasAnyAuthority("USER", "ADMIN"); // Cho phép cả USER và ADMIN truy cập
+
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

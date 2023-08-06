@@ -1,11 +1,13 @@
 package com.example.DecorEcommerceProject.Service.Impl;
 
 import com.example.DecorEcommerceProject.Entities.DTO.RegisterRequest;
+import com.example.DecorEcommerceProject.Entities.DeliveryAddress;
 import com.example.DecorEcommerceProject.Entities.Enum.Level;
 import com.example.DecorEcommerceProject.Entities.Role;
 import com.example.DecorEcommerceProject.Entities.Token.PasswordResetToken;
 import com.example.DecorEcommerceProject.Entities.User;
 import com.example.DecorEcommerceProject.Exception.BadRequestException;
+import com.example.DecorEcommerceProject.Repositories.DeliveryAddressRepository;
 import com.example.DecorEcommerceProject.Repositories.PasswordResetTokenRepository;
 import com.example.DecorEcommerceProject.Repositories.RoleRepository;
 import com.example.DecorEcommerceProject.Repositories.UserRepository;
@@ -17,17 +19,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
 import java.util.*;
 
 @Service
 
-public class UserServiceImpl implements IUserService{
+public class UserServiceImpl implements IUserService {
+    private DeliveryAddressRepository deliveryAddressRepository;
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
     private PasswordResetTokenRepository passwordResetTokenRepository;
-    public UserServiceImpl(UserRepository userRepository,RoleRepository roleRepository, PasswordEncoder passwordEncoder,
-                           PasswordResetTokenRepository passwordResetTokenRepository){
+
+    public UserServiceImpl(DeliveryAddressRepository deliveryAddressRepository, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder,
+                           PasswordResetTokenRepository passwordResetTokenRepository) {
+        this.deliveryAddressRepository = deliveryAddressRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -73,11 +79,11 @@ public class UserServiceImpl implements IUserService{
 
     @Override
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(()->new EntityNotFoundException("User not found with id " + id));
+        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found with id " + id));
     }
 
     @Override
-    public User getUser(String username) {
+    public User getByUserName(String username) {
         return userRepository.findByUsername(username);
     }
 
@@ -85,12 +91,9 @@ public class UserServiceImpl implements IUserService{
     public User updateUser(Long id, User user) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-
-        existingUser.setUsername(user.getUsername());
         existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         existingUser.setEmail(user.getEmail());
         existingUser.setPhone(user.getPhone());
-        existingUser.setAddress(user.getAddress());
         // Update other fields as necessary
 
         return userRepository.save(existingUser);
@@ -99,11 +102,11 @@ public class UserServiceImpl implements IUserService{
     @Override
     public String deleteUser(Long id) {
         User user = userRepository.findById(id).get();
-        if(user == null){
-            return "Cannot find User " +id;
-        }else{
+        if (user == null) {
+            return "Cannot find User " + id;
+        } else {
             userRepository.delete(user);
-            return "User "+id+ " has been deleted !";
+            return "User " + id + " has been deleted !";
         }
     }
 
@@ -124,10 +127,9 @@ public class UserServiceImpl implements IUserService{
 
     @Override
     public User findUserByPhone(String phone) {
-        return  userRepository.findUserByPhone(phone);
+        return userRepository.findUserByPhone(phone);
     }
 
-   
 
     @Override
     public User updateUserByLoggedIn(User user) {
@@ -135,7 +137,6 @@ public class UserServiceImpl implements IUserService{
         user.setUsername(user.getUsername());
         user.setEmail(user.getEmail());
         user.setPhone(user.getPhone());
-        user.setAddress(user.getAddress());
         userRepository.save(user);
         return user;
     }
@@ -152,14 +153,14 @@ public class UserServiceImpl implements IUserService{
         PasswordResetToken passwordResetToken
                 = passwordResetTokenRepository.findByToken(token);
 
-        if(passwordResetToken == null) {
+        if (passwordResetToken == null) {
             return "invalid";
         }
 
         User user = passwordResetToken.getUser();
         Calendar cal = Calendar.getInstance();
 
-        if((passwordResetToken.getExpirationTime().getTime()
+        if ((passwordResetToken.getExpirationTime().getTime()
                 - cal.getTime().getTime()) <= 0) {
             passwordResetTokenRepository.delete(passwordResetToken);
             return "token has expired";
@@ -180,7 +181,7 @@ public class UserServiceImpl implements IUserService{
 
     @Override
     public boolean checkIfValidOldPassword(User user, String oldPassword) {
-        return passwordEncoder.matches(oldPassword,user.getPassword());
+        return passwordEncoder.matches(oldPassword, user.getPassword());
     }
 
     @Override
@@ -201,13 +202,13 @@ public class UserServiceImpl implements IUserService{
     }
 
 
-
     @Override
-    public User register(RegisterRequest model){
+    @Transactional
+    public User register(RegisterRequest model) {
         String password = model.getPassword();
         String confirmPassword = model.getConfirmPassword();
         if (!password.equals(confirmPassword)) {
-            throw new  BadRequestException("Password and Confirm Password do not match.");
+            throw new BadRequestException("Password and Confirm Password do not match.");
         }
         User user = new User();
         user.setUsername(model.getUsername());
@@ -215,19 +216,17 @@ public class UserServiceImpl implements IUserService{
         user.setPassword(passwordEncoder.encode(password));
         user.setPhone(model.getPhone());
         user.setEmail(model.getEmail());
-        user.setAddress(model.getAddress());
         user.setPoint(0);
         user.setLevel(Level.NEW);
         Role roles = roleRepository.findByName("USER");
         user.setRoles(Collections.singletonList(roles));
-        return userRepository.save(user);
-
+        userRepository.save(user);
+        DeliveryAddress deliveryAddress = model.getDeliveryAddress();
+        deliveryAddress.setName(user.getName());
+        deliveryAddress.setPhone(user.getPhone());
+        deliveryAddress.setUser(user);
+        deliveryAddress.setActive(true);
+        deliveryAddressRepository.save(deliveryAddress);
+        return user;
     }
-
-//    @Override
-//    public User findUserByUsername(String username) {
-//        return userRepository.findByUsername(username);
-//    }
-
-
 }

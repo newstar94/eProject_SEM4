@@ -8,6 +8,7 @@ import com.example.DecorEcommerceProject.Repositories.RoleRepository;
 import com.example.DecorEcommerceProject.Repositories.UserRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.annotation.PostConstruct;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 @SpringBootApplication
+@EnableScheduling
 public class DecorEcommerceProjectApplication {
     private final AdminConfigRepository adminConfigRepository;
     private final RoleRepository roleRepository;
@@ -37,24 +39,7 @@ public class DecorEcommerceProjectApplication {
     @PostConstruct
     public void init() {
         if (adminConfigRepository.count() == 0) {
-            AdminConfig adminConfig = new AdminConfig();
-            adminConfig.setVnp_apiUrl("https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
-            adminConfig.setVnp_PayUrl("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
-            adminConfig.setVnp_ReturnUrl("http://localhost:5173/order/payment");
-            adminConfig.setVnp_TmnCode("NVWUQGML");
-            adminConfig.setVnp_HashSecret("VJVDYZJTDGQAZGAJUQRZAVKMEZEECJJM");
-            adminConfig.setDelivery_fee(40000);
-            adminConfig.setAmount_to_free(10000000);
-            adminConfig.setMax_distance(5);
-            adminConfig.setDelivery_fee_km(9000);
-            adminConfig.setGhn_token("6ab4fe69-fe4e-11ed-b678-22ca76951087");
-            adminConfig.setShop_id("124400");
-            adminConfig.setGhn_fee_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee");
-            adminConfig.setGhn_create_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create");
-            adminConfig.setGhn_print_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/a5/gen-token");
-            adminConfig.setMap_url("http://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix");
-            adminConfig.setMap_token("AsUeP0wj7060aELgchJgAXeswbHWrY5EmLw0NqMuhhaTBafzXyTSyedRWGmqxF58");
-            adminConfig.setAddress("158 Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội");
+            AdminConfig adminConfig = initAdminConfig();
             adminConfigRepository.save(adminConfig);
         }
         if (roleRepository.count() == 0) {
@@ -81,6 +66,29 @@ public class DecorEcommerceProjectApplication {
             user.setRoles(Collections.singletonList(roles));
             userRepository.save(user);
         }
+    }
+
+    private static AdminConfig initAdminConfig() {
+        AdminConfig adminConfig = new AdminConfig();
+        adminConfig.setVnp_apiUrl("https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
+        adminConfig.setVnp_PayUrl("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
+        adminConfig.setVnp_ReturnUrl("http://localhost:5173/order/payment");
+        adminConfig.setVnp_TmnCode("NVWUQGML");
+        adminConfig.setVnp_HashSecret("VJVDYZJTDGQAZGAJUQRZAVKMEZEECJJM");
+        adminConfig.setDelivery_fee(40000);
+        adminConfig.setAmount_to_free(10000000);
+        adminConfig.setMax_distance(5);
+        adminConfig.setDelivery_fee_km(9000);
+        adminConfig.setGhn_token("6ab4fe69-fe4e-11ed-b678-22ca76951087");
+        adminConfig.setShop_id("124400");
+        adminConfig.setGhn_fee_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee");
+        adminConfig.setGhn_create_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create");
+        adminConfig.setGhn_status_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/detail");
+        adminConfig.setGhn_print_url("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/a5/gen-token");
+        adminConfig.setMap_url("http://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix");
+        adminConfig.setMap_token("AsUeP0wj7060aELgchJgAXeswbHWrY5EmLw0NqMuhhaTBafzXyTSyedRWGmqxF58");
+        adminConfig.setAddress("158 Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội");
+        return adminConfig;
     }
 
 }

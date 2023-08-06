@@ -1,6 +1,5 @@
 package com.example.DecorEcommerceProject.Controller;
 
-import com.example.DecorEcommerceProject.ResponseAPI.ResponseObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -167,6 +166,22 @@ public class OrderController {
                 return ResponseEntity.ok().body(updatedOrder);
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not return order with id: " + id);
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/delivered/{id}") //for admin
+    public ResponseEntity<?> deliveredOrder(@PathVariable Long id) {
+        try {
+            Order updatedOrder = orderService.deliveredOrder(id);
+            if (updatedOrder != null) {
+                return ResponseEntity.ok().body(updatedOrder);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not finish order with id: " + id);
             }
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

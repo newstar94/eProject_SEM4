@@ -22,17 +22,21 @@ import org.apache.http.util.EntityUtils;
 import org.cloudinary.json.JSONArray;
 import org.cloudinary.json.JSONObject;
 import org.springframework.context.ApplicationContextException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
 import com.example.DecorEcommerceProject.Service.IOrderService;
+
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -370,6 +374,17 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    public Order deliveredOrder(Long id) {
+        Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
+        if (existOrder.getStatus() == OrderStatus.DELIVERING) {
+            existOrder.setStatus(OrderStatus.DELIVERED);
+            existOrder.setReceivedAt(LocalDateTime.now());
+            return orderRepository.save(existOrder);
+        }
+        return null;
+    }
+
+    @Override
     @Transactional
     public Order cancelOrder(Long id, HttpServletRequest request) throws IOException {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
@@ -432,7 +447,7 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public Order returnOrder(Long id) {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
-        if (existOrder.getStatus() == OrderStatus.DELIVERING) {
+        if (existOrder.getStatus() == OrderStatus.DELIVERED) {
             existOrder.setStatus(OrderStatus.RETURN);
             return orderRepository.save(existOrder);
         }
@@ -453,10 +468,10 @@ public class OrderServiceImpl implements IOrderService {
             User user = existOrder.getUser();
             if (user != null) {
                 user.setPoint((int) (user.getPoint() + existOrder.getAmount() / 1000));
-                if (user.getPoint() > 1000) {
+                if (user.getPoint() > 5000) {
                     user.setLevel(Level.SILVER);
                 }
-                if (user.getPoint() > 10000) {
+                if (user.getPoint() > 20000) {
                     user.setLevel(Level.GOLD);
                 }
                 if (user.getPoint() > 100000) {
@@ -467,6 +482,42 @@ public class OrderServiceImpl implements IOrderService {
             return orderRepository.save(existOrder);
         }
         return null;
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void autoFinishOrder() {
+        List<Order> list = orderRepository.findAllDeliveredOrder();
+        for (Order order : list) {
+            if (order.getReceivedAt().isBefore(LocalDateTime.now().minusDays(3))) {
+                order.setStatus(OrderStatus.FINISHED);
+                orderRepository.save(order);
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void autoDeliveredOrder() throws Exception {
+        List<Order> list = orderRepository.findAllDeliveringOrder();
+        GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
+        for (Order order : list) {
+            String ghnCode = order.getGhnCode();
+            Gson gson = new Gson();
+            String jsonString = gson.toJson(new GhnCode(ghnCode));
+            if (ghnApiHandler.status(jsonString).status.equals("delivered")) {
+                order.setStatus(OrderStatus.DELIVERED);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+                LocalDateTime dateTime = LocalDateTime.parse(ghnApiHandler.status(jsonString).updatedDate, formatter);
+                order.setReceivedAt(dateTime);
+                orderRepository.save(order);
+            }
+        }
+    }
+
+    public static class GhnCode {
+        public GhnCode(String order_code) {
+            this.order_code = order_code;
+        }
+        private String order_code;
     }
 
     @Override
@@ -519,6 +570,11 @@ public class OrderServiceImpl implements IOrderService {
             return adminConfig.getGhn_print_url();
         }
 
+        private String statusGhnApiUrl() {
+            AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
+            return adminConfig.getGhn_status_url();
+        }
+
         private String getToken() {
             AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
             return adminConfig.getGhn_token();
@@ -565,6 +621,20 @@ public class OrderServiceImpl implements IOrderService {
         public String printGhn(String jsonString) throws Exception {
             JsonObject jsonObject = sendRequest(printGhnApiUrl(), jsonString);
             return jsonObject.getAsJsonObject("data").getAsJsonPrimitive("token").getAsString();
+        }
+
+        public Status status(String jsonString) throws Exception {
+            JsonObject jsonObject = sendRequest(statusGhnApiUrl(), jsonString);
+            Status status = new Status();
+            status.setUpdatedDate(jsonObject.getAsJsonObject("data").getAsJsonPrimitive("updated_date").getAsString());
+            status.setStatus(jsonObject.getAsJsonObject("data").getAsJsonPrimitive("status").getAsString());
+            return status;
+        }
+
+        @Data
+        public static class Status {
+            private String updatedDate;
+            private String status;
         }
     }
 

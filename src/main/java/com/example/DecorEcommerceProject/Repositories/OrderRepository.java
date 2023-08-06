@@ -12,4 +12,8 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order,Long> {
     @Query(value = "SELECT * FROM orders WHERE user_id = :UserId",nativeQuery = true)
     List<Order> findAllByUserId(Long UserId);
+    @Query(value = "SELECT * FROM orders WHERE status = 'DELIVERED'",nativeQuery = true)
+    List<Order> findAllDeliveredOrder();
+    @Query(value = "SELECT * FROM orders WHERE status = 'DELIVERING' AND delivery_type = 0",nativeQuery = true)
+    List<Order> findAllDeliveringOrder();
 }

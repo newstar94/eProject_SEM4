@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import com.example.DecorEcommerceProject.Entities.Order;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
-import com.example.DecorEcommerceProject.Entities.Enum.OrderStatus;
+import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,6 +18,8 @@ public interface IOrderService {
     Order confirmOrder(Long id) throws Exception;
 
     Order deliveringOrder(Long id) throws Exception;
+
+    Order deliveredOrder(Long id);
 
     Order cancelOrder(Long id, HttpServletRequest request) throws IOException;
 

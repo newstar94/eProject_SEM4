@@ -27,6 +27,9 @@ public class Order {
     @Column(name = "date_created", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "date_received")
+    private LocalDateTime receivedAt;
+
     @ManyToOne
 //    @JsonIgnore
     @JoinColumn(name = "user_id")
@@ -37,7 +40,7 @@ public class Order {
     private Voucher voucher;
 
     @ManyToOne
-    @JoinColumn(name = "delivery_address_id",nullable = false)
+    @JoinColumn(name = "delivery_address_id", nullable = false)
     private DeliveryAddress deliveryAddress;
 
     @Column

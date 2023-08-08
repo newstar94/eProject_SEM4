@@ -92,7 +92,7 @@ public class SecurityConfig {
 
         http.authorizeRequests().antMatchers(ALLOW_ALL_URLS).permitAll();
         http.authorizeRequests().antMatchers(ALLOW_USER_URLS).hasRole("USER");
-        http.authorizeRequests().antMatchers(ALLOW_ADMIN_URLS).hasRole("ADMIN");
+        http.authorizeRequests().antMatchers(ALLOW_ADMIN_URLS).hasAnyAuthority("ADMIN");
         http.authorizeRequests().antMatchers(ALLOW_ADMIN_USER_URLS).hasAnyAuthority("USER", "ADMIN"); // Cho phép cả USER và ADMIN truy cập
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

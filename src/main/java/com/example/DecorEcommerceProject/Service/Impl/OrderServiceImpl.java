@@ -22,7 +22,6 @@ import org.apache.http.util.EntityUtils;
 import org.cloudinary.json.JSONArray;
 import org.cloudinary.json.JSONObject;
 import org.springframework.context.ApplicationContextException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import com.example.DecorEcommerceProject.Entities.*;
@@ -41,6 +40,7 @@ import java.util.*;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
+    private final EmailServiceImpl emailService;
     private final AdminConfigRepository adminConfigRepository;
     private final VoucherRepository voucherRepository;
     private final VoucherUserRepository voucherUserRepository;
@@ -54,7 +54,8 @@ public class OrderServiceImpl implements IOrderService {
     private final DeliveryAddressServiceImpl deliveryAddressService;
     private final DeliveryAddressRepository deliveryAddressRepository;
 
-    public OrderServiceImpl(AdminConfigRepository adminConfigRepository, VoucherRepository voucherRepository, VoucherUserRepository voucherUserRepository, ProductRepository productRepository, DiscountRepository discountRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, PaymentServiceImpl paymentService, UserRepository userRepository, VoucherServiceImpl voucherService, DeliveryAddressServiceImpl deliveryAddressService, DeliveryAddressRepository deliveryAddressRepository) {
+    public OrderServiceImpl(EmailServiceImpl emailService, AdminConfigRepository adminConfigRepository, VoucherRepository voucherRepository, VoucherUserRepository voucherUserRepository, ProductRepository productRepository, DiscountRepository discountRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, PaymentServiceImpl paymentService, UserRepository userRepository, VoucherServiceImpl voucherService, DeliveryAddressServiceImpl deliveryAddressService, DeliveryAddressRepository deliveryAddressRepository) {
+        this.emailService = emailService;
         this.adminConfigRepository = adminConfigRepository;
         this.voucherRepository = voucherRepository;
         this.voucherUserRepository = voucherUserRepository;
@@ -363,11 +364,22 @@ public class OrderServiceImpl implements IOrderService {
                 if (!ghnCode.isEmpty()) {
                     existOrder.setGhnCode(ghnCode);
                     existOrder.setStatus(OrderStatus.DELIVERING);
+                    String to = existOrder.getUser().getEmail();
+                    String subject = "Đơn hàng của bạn đang được vận chuyển";
+                    String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
+                            "<p>Đơn hàng " +existOrder.getId()+ " của bạn đang được vận chuyển</p>" +
+                            "<p>Mã đơn hàng GHN: " + existOrder.getGhnCode() + " </p>";
+                    emailService.sendEmail(to, subject, content);
                     return orderRepository.save(existOrder);
                 }
             }
         } else {
             existOrder.setStatus(OrderStatus.DELIVERING);
+            String to = existOrder.getUser().getEmail();
+            String subject = "Đơn hàng của bạn đang được vận chuyển";
+            String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
+                    "<p>Đơn hàng " +existOrder.getId()+ " của bạn đang được vận chuyển</p>";
+            emailService.sendEmail(to, subject, content);
             return orderRepository.save(existOrder);
         }
         return null;
@@ -517,6 +529,7 @@ public class OrderServiceImpl implements IOrderService {
         public GhnCode(String order_code) {
             this.order_code = order_code;
         }
+
         private String order_code;
     }
 

@@ -27,7 +27,7 @@ public class OrderController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllOrder() {
-        if (orderService.getAllOrder().size() == 0) {
+        if (orderService.getAllOrder().isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List order is empty!");
         }
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getAllOrder());
@@ -35,7 +35,7 @@ public class OrderController {
 
     @GetMapping("/user/{id}")
     public ResponseEntity<?> getAllOrderByUseId(@PathVariable Long id) {
-        if (orderService.getAllOrderByUseId(id).size() == 0) {
+        if (orderService.getAllOrderByUseId(id).isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List order is empty!");
         }
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getAllOrderByUseId(id));

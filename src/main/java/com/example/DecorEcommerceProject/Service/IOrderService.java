@@ -3,11 +3,8 @@ package com.example.DecorEcommerceProject.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-
 import com.example.DecorEcommerceProject.Entities.Order;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
-import org.springframework.http.ResponseEntity;
-
 import javax.servlet.http.HttpServletRequest;
 
 public interface IOrderService {

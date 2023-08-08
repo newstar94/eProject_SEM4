@@ -1,0 +1,1086 @@
+{
+	"info": {
+		"_postman_id": "54f42610-1f46-4c81-91fd-59c8f71ee1b6",
+		"name": "prj_sem4",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26456184"
+	},
+	"item": [
+		{
+			"name": "Discount",
+			"item": [
+				{
+					"name": "GetAllDiscount",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/discounts",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"discounts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Discount",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"discount\":{\r\n    \"start\": \"2023-07-01T00:00:00\",\r\n    \"end\": \"2023-09-30T23:59:59\",\r\n    \"limit\": 200,\r\n    \"discountPercentage\": 10,\r\n    \"discountAmountMax\": 200000\r\n    },\r\n    \"products\":[\r\n        {\r\n            \"id\":1\r\n        },\r\n        {\r\n            \"id\":2\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/discount/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"discount",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Discount",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"discount\": {\r\n        \"id\":1,\r\n        \"start\": \"2023-10-10T00:00:00\",\r\n        \"end\": \"2023-10-10T23:59:59\",\r\n        \"limit\": 200,\r\n        \"discountPercentage\": 10,\r\n        \"discountAmountMax\": 100000\r\n    },\r\n    \"products\": [\r\n        {\r\n            \"id\": 1\r\n        },\r\n        {\r\n            \"id\": 2\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/discount/update/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"discount",
+								"update",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Discount by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/discount/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"discount",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Discount by ProductID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/discounts/get_by_product/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"discounts",
+								"get_by_product",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Product by DiscountId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/discount/product/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"discount",
+								"product",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "Place Order (Đặt hàng)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"paymentType\":\"ONLINE\",\r\n    \"deliveryType\":\"GHN\",\r\n    \"voucherCode\":\"TEST\",\r\n    \"deliveryAddress\":{\r\n        \"id\":1\r\n    },\r\n    \"user\":{\r\n        \"id\":2\r\n    },\r\n    \"orderItemDTOS\":[\r\n        {\r\n            \"productId\":1,\r\n            \"quantity\":1\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/order/place_order",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"place_order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Order",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/order/cancel/6",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"cancel",
+								"6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delivering",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/delivering/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"delivering",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/confirm/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"confirm",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Finish",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/finish/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"finish",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Return",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/return/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"return",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Return",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/accept_return/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"accept_return",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Order",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order by UserId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/user/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"user",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Checkout (Chưa đặt hàng, chưa lưu dữ liệu)",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"paymentType\":\"COD\",\r\n    \"deliveryType\":\"SHOP\",\r\n    \"voucherCode\":\"\",\r\n    \"deliveryAddress\":{\r\n        \"id\":1\r\n    },\r\n    \"user\":{\r\n        \"id\":2\r\n    },\r\n    \"orderItemDTOS\":[\r\n        {\r\n            \"productId\":1,\r\n            \"quantity\":1\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/order/checkout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"checkout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Re-Payment",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/place_order/9",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"place_order",
+								"9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Print Order",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/print/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"print",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delivered",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/order/delivered/35",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"order",
+								"delivered",
+								"35"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Config",
+			"item": [
+				{
+					"name": "Edit  Admin Config",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"vnp_apiUrl\": \"https://sandbox.vnpayment.vn/merchant_webapi/api/transaction\",\r\n  \"vnp_PayUrl\": \"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html\",\r\n  \"vnp_ReturnUrl\": \"http://localhost:9090/api/order/result\",\r\n  \"vnp_TmnCode\": \"NVWUQGML\",\r\n  \"vnp_HashSecret\": \"VJVDYZJTDGQAZGAJUQRZAVKMEZEECJJM\",\r\n  \"delivery_fee\": 40000,\r\n  \"amount_to_free\": 10000000,\r\n  \"max_distance\": 5,\r\n  \"delivery_fee_km\": 9000,\r\n  \"ghn_token\": \"6ab4fe69-fe4e-11ed-b678-22ca76951087\",\r\n  \"shop_id\": \"124400\",\r\n  \"ghn_fee_url\": \"https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee\",\r\n  \"ghn_create_url\": \"https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create\",\r\n  \"map_url\": \"https://maps.googleapis.com/maps/api/distancematrix/json\",\r\n  \"map_token\": \"AIzaSyD4wVTY8AFwxgsLzgUh9YcWcxsCMFol4g0\",\r\n  \"address\": \"158 Nguyễn Khánh Toàn, Quan Hoa, Cầu Giấy, Hà Nội\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/admin_config/edit",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"admin_config",
+								"edit"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Delivery Address",
+			"item": [
+				{
+					"name": "Add Delivery Address",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user\":{\r\n        \"id\":2\r\n    },\r\n    \"name\": \"Vy Tuấn Dương\",\r\n    \"phone\":\"0988401235\",\r\n    \"address\":\"34 Hàm Long\",\r\n    \"province_id\": 201,\r\n    \"province\": \"Hà Nội\",\r\n    \"district_id\":\"1489\",\r\n    \"district\":\"Quận Hoàn Kiếm\",\r\n    \"wardCode\":\"1A0206\",\r\n    \"ward\": \"Phường Hàng Bài\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/delivery_address/add",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"delivery_address",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Delivery Address",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user\":{\r\n        \"id\":2\r\n    },\r\n    \"name\": \"Vy Tuấn Dương\",\r\n    \"phone\":\"0988401235\",\r\n    \"address\":\"24 Hàm Long\",\r\n    \"province_id\": 201,\r\n    \"province\": \"Hà Nội\",\r\n    \"district_id\":\"1489\",\r\n    \"district\":\"Quận Hoàn Kiếm\",\r\n    \"wardCode\":\"1A0206\",\r\n    \"ward\": \"Phường Hàng Bài\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/delivery_address/edit/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"delivery_address",
+								"edit",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Delivery Address by UserID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/delivery_address/user/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"delivery_address",
+								"user",
+								"2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Voucher",
+			"item": [
+				{
+					"name": "Create Voucher",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"voucher\":{\r\n        \"code\":\"TEST2\",\r\n        \"start\": \"2023-09-15T00:00:00\",\r\n        \"end\":\"2023-12-31T23:59:59\",\r\n        \"limit\":1000,\r\n        \"percentage\":10,\r\n        \"amountMax\":100000\r\n    },\r\n    \"users\":[\r\n        {\r\n            \"id\":2\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/voucher/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"voucher",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Apply Voucher",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/voucher/apply?voucherCode=TEST&username=newstar94",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"voucher",
+								"apply"
+							],
+							"query": [
+								{
+									"key": "voucherCode",
+									"value": "TEST"
+								},
+								{
+									"key": "username",
+									"value": "newstar94"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Product",
+			"item": [
+				{
+					"name": "Set top sold Admin",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/products/all-top-sold?top=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"products",
+								"all-top-sold"
+							],
+							"query": [
+								{
+									"key": "top",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Top Sold User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9090/api/products/top-sold?top=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"products",
+								"top-sold"
+							],
+							"query": [
+								{
+									"key": "top",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwOTEyMzQ1Njc4IiwiaWF0IjoxNjkwMjU1ODM5LCJleHAiOjE2OTAyNjI4Mzl9.KZpwPMy_6UElfE2XMmpfjoLHMayio37lSGCTudtZE-nNiTAUJyveDbSLpMbkRiLG6c_r-tR9Tu1gYGVKGqSJqQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "description",
+									"value": "Tượng đèn cô gái khiêu vũ thihs hợp bày sảnh hàng lang, chân cầu thang, chân thang máy",
+									"type": "text"
+								},
+								{
+									"key": "inventory",
+									"value": "100",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "1500000",
+									"type": "text"
+								},
+								{
+									"key": "weight",
+									"value": "1000",
+									"type": "text"
+								},
+								{
+									"key": "imageFile",
+									"type": "file",
+									"src": "/C:/Users/newst/OneDrive/Desktop/tuong-den-co-gai-khieu-vu-4-600x800.jpg"
+								},
+								{
+									"key": "extraImages",
+									"type": "file",
+									"src": [
+										"/C:/Users/newst/OneDrive/Desktop/tuong-den-co-gai-khieu-vu-1.jpg",
+										"/C:/Users/newst/OneDrive/Desktop/tuong-den-co-gai-khieu-vu-2.jpg"
+									]
+								},
+								{
+									"key": "deliveryAvailable",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "productStatus",
+									"value": "AVAILABLE",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Tượng đèn cô gái khiêu vũ",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/products/save/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"products",
+								"save",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product By Price",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n        {\r\n            \"id\":1\r\n        },\r\n        {\r\n            \"id\":2\r\n        },\r\n        {\r\n            \"id\":3\r\n        }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/api/products/get-by-price?bottom=1000000&top=2000000",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"api",
+								"products",
+								"get-by-price"
+							],
+							"query": [
+								{
+									"key": "bottom",
+									"value": "1000000"
+								},
+								{
+									"key": "top",
+									"value": "2000000"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Lấy địa chỉ phường xã",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Token",
+						"value": "6ab4fe69-fe4e-11ed-b678-22ca76951087",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"district_id\":1489\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward",
+					"protocol": "https",
+					"host": [
+						"dev-online-gateway",
+						"ghn",
+						"vn"
+					],
+					"path": [
+						"shiip",
+						"public-api",
+						"master-data",
+						"ward"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Lấy địa chỉ quận huyện",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Token",
+						"value": "6ab4fe69-fe4e-11ed-b678-22ca76951087",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"province_id\":201\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district",
+					"protocol": "https",
+					"host": [
+						"dev-online-gateway",
+						"ghn",
+						"vn"
+					],
+					"path": [
+						"shiip",
+						"public-api",
+						"master-data",
+						"district"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Lấy địa chỉ tỉnh thành",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Token",
+						"value": "6ab4fe69-fe4e-11ed-b678-22ca76951087",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province",
+					"protocol": "https",
+					"host": [
+						"dev-online-gateway",
+						"ghn",
+						"vn"
+					],
+					"path": [
+						"shiip",
+						"public-api",
+						"master-data",
+						"province"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All User by Level",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwOTg4NDAxMjM1IiwiaWF0IjoxNjg5NjY4NDY2LCJleHAiOjE2ODk2NzU0NjZ9.2YEpRMmIXzodGWL1Ty_Exh4EOYse-BIaN1RHODa4S2ycMfAFeD2nCxMEL7DRxAAaHGt_1bpFtAzpPbpHLzjuyQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9090/api/users/get-by-level?level=NEW",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9090",
+					"path": [
+						"api",
+						"users",
+						"get-by-level"
+					],
+					"query": [
+						{
+							"key": "level",
+							"value": "NEW"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"phone\":\"0912345678\",\r\n    \"password\":\"123456\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9090/api/users/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9090",
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"Vy Tuấn Dương\",\r\n    \"username\":\"newstar95\",\r\n    \"password\":\"123456\",\r\n    \"confirmPassword\":\"123456\",\r\n    \"email\":\"duong@gmail.com\",\r\n    \"phone\":\"0988401237\",\r\n    \"deliveryAddress\":{\r\n        \"address\":\"34 Hàm Long\",\r\n        \"province_id\": 201,\r\n        \"province\": \"Hà Nội\",\r\n        \"district_id\":\"1489\",\r\n        \"district\":\"Quận Hoàn Kiếm\",\r\n        \"wardCode\":\"1A0206\",\r\n        \"ward\": \"Phường Hàng Bài\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9090/api/users/add",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9090",
+					"path": [
+						"api",
+						"users",
+						"add"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,6 +1,7 @@
 package com.example.DecorEcommerceProject.Entities;
 
 import com.example.DecorEcommerceProject.Entities.Enum.DeliveryType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -31,7 +32,7 @@ public class Order {
     private LocalDateTime receivedAt;
 
     @ManyToOne
-//    @JsonIgnore
+    @JsonIgnore
     @JoinColumn(name = "user_id")
     private User user;
 

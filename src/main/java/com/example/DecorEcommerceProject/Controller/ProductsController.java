@@ -77,7 +77,7 @@ public class ProductsController {
             return ResponseEntity.ok().body(productService.getAllProductByCateIDAndKeyword(cateID, keyword));
         }
     }
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<?> createProduct(@ModelAttribute ProductDto productDto,
                                            @RequestParam("imageFile") MultipartFile mainImageMultipart,
                                            @RequestParam("extraImages") List<MultipartFile> extraImagesMultipart

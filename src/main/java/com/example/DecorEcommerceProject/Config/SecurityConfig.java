@@ -121,7 +121,7 @@ public class SecurityConfig {
             "/api/category/save/{id}",
 
             //Product
-            "/api/products",                        //createProduct
+            "/api/products/add",                        //createProduct
             "/api/products/save/{id}",
             "/api/products/delete/{id}",
             "/api/products/delete-image/{id}",

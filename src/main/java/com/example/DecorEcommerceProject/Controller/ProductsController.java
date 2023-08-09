@@ -37,7 +37,7 @@ public class ProductsController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(productService.getAllProducts());
     }
-    @GetMapping("index")
+    @GetMapping("/index")
     public ResponseEntity<?> getRandomAmountOfProductsIndex() {
         return ResponseEntity.status(HttpStatus.OK).body(productService.getRandomAmountOfProducts());
     }
@@ -106,7 +106,7 @@ public class ProductsController {
         }
     }
 
-    @PostMapping("delete-image/{id}")
+    @PostMapping("/delete-image/{id}")
     public ResponseEntity<?> deleteImage(@PathVariable Long id) {
         try {
             productService.deleteExtraImage(id);

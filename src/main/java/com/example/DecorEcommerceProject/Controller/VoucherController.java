@@ -34,7 +34,7 @@ public class VoucherController {
             return ResponseEntity.status(HttpStatus.OK).body("Voucher không hợp lệ hoặc đã hết lượt sử dụng!");
     }
 
-    @PostMapping("voucher/create")
+    @PostMapping("/voucher/create")
     public ResponseEntity<?> createVoucher(@Validated @RequestBody VoucherDTO voucherDTO) {
         try {
             Voucher voucher = voucherService.createVoucher(voucherDTO);

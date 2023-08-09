@@ -33,7 +33,7 @@ public class DeliveryAddressController {
         }
     }
 
-    @GetMapping("user/{id}")
+    @GetMapping("/user/{id}")
     public ResponseEntity<?> getAllDeliveryAddressByUserId(@PathVariable Long id) {
         if (deliveryAddressService.getAllDeliveryAddressByUserId(id).size() == 0) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List delivery address is empty!");

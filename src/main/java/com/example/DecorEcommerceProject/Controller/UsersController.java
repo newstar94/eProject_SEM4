@@ -110,7 +110,7 @@ public class UsersController {
         return ResponseEntity.created(uri).body(userService.saveRole(role));
     }
 
-    @PostMapping("/role/addtouser")
+    @PostMapping("/role/addToUser")
     public String addRoleToUser(@RequestBody RoleToUser toUser) throws Exception {
         return userService.addRoleToUser(toUser.getPhone(), toUser.getRoleName());
     }

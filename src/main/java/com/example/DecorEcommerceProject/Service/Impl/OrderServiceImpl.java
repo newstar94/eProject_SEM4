@@ -276,7 +276,7 @@ public class OrderServiceImpl implements IOrderService {
             try {
                 deliveryFee = ghnApiHandler.getDeliveryFee(jsonString);
             } catch (Exception e) {
-                throw new ApplicationContextException("Can not place order");
+                throw new ApplicationContextException("Can calculate delivery fee");
             }
 
         }

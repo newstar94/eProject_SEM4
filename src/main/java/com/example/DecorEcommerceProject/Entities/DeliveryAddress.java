@@ -15,7 +15,7 @@ public class DeliveryAddress {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-//    @JsonIgnore
+    @JsonIgnore
     @JoinColumn(name = "user_id")
     private User user;
 

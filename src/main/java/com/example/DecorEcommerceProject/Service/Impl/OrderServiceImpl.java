@@ -6,6 +6,15 @@ import com.example.DecorEcommerceProject.Entities.Enum.*;
 import com.example.DecorEcommerceProject.Repositories.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.itextpdf.io.font.FontConstants;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.property.VerticalAlignment;
 import lombok.Data;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -28,7 +37,6 @@ import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
 import com.example.DecorEcommerceProject.Service.IOrderService;
-
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
@@ -305,11 +313,37 @@ public class OrderServiceImpl implements IOrderService {
         GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         List<String> order_codes = new ArrayList<>();
-        if (existOrder.getStatus() == OrderStatus.DELIVERING && existOrder.getDeliveryType() == DeliveryType.GHN) {
-            order_codes.add(existOrder.getGhnCode());
-            Gson gson = new Gson();
-            String jsonString = gson.toJson(new print(order_codes));
-            return "https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=" + ghnApiHandler.printGhn(jsonString);
+        if (existOrder.getStatus() == OrderStatus.DELIVERING) {
+            if (existOrder.getDeliveryType() == DeliveryType.GHN) {
+                order_codes.add(existOrder.getGhnCode());
+                Gson gson = new Gson();
+                String jsonString = gson.toJson(new print(order_codes));
+                return "https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=" + ghnApiHandler.printGhn(jsonString);
+            } else {
+                String path = "D:\\" + existOrder.getId() + ".pdf";
+                try {
+                    PdfDocument pdfDoc = new PdfDocument(new PdfWriter(path));
+                    Document doc = new Document(pdfDoc);
+
+                    // Tạo font sử dụng mã hóa UTF-8 (Unicode)
+                    PdfFont font = PdfFontFactory.createFont(FontConstants.TIMES_ROMAN, "UTF-8", true);
+
+                    String vietnameseText = "Xin chào, iText 7 với tiếng Việt!";
+
+                    Paragraph paragraph = new Paragraph(vietnameseText)
+                            .setFont(font)
+                            .setFontSize(12)
+                            .setTextAlignment(TextAlignment.CENTER)
+                            .setVerticalAlignment(VerticalAlignment.MIDDLE);
+
+                    doc.add(paragraph);
+
+                    doc.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return path;
+            }
         }
         return null;
     }
@@ -367,7 +401,7 @@ public class OrderServiceImpl implements IOrderService {
                     String to = existOrder.getUser().getEmail();
                     String subject = "Đơn hàng của bạn đang được vận chuyển";
                     String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
-                            "<p>Đơn hàng " +existOrder.getId()+ " của bạn đang được vận chuyển</p>" +
+                            "<p>Đơn hàng " + existOrder.getId() + " của bạn đang được vận chuyển</p>" +
                             "<p>Mã đơn hàng GHN: " + existOrder.getGhnCode() + " </p>";
                     emailService.sendEmail(to, subject, content);
                     return orderRepository.save(existOrder);
@@ -378,7 +412,7 @@ public class OrderServiceImpl implements IOrderService {
             String to = existOrder.getUser().getEmail();
             String subject = "Đơn hàng của bạn đang được vận chuyển";
             String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
-                    "<p>Đơn hàng " +existOrder.getId()+ " của bạn đang được vận chuyển</p>";
+                    "<p>Đơn hàng " + existOrder.getId() + " của bạn đang được vận chuyển</p>";
             emailService.sendEmail(to, subject, content);
             return orderRepository.save(existOrder);
         }
@@ -432,7 +466,11 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     private Order cancelOrder(Order existOrder) {
-        existOrder.setStatus(OrderStatus.CANCELLED);
+        if (existOrder.getStatus() == OrderStatus.RETURN) {
+            existOrder.setStatus(OrderStatus.RETURNED);
+        } else {
+            existOrder.setStatus(OrderStatus.CANCELLED);
+        }
         for (OrderItem orderItem : existOrder.getOrderItems()) {
             Product product = orderItem.getProduct();
             product.setInventory(product.getInventory() + orderItem.getQuantity());
@@ -470,7 +508,7 @@ public class OrderServiceImpl implements IOrderService {
     @Transactional
     public Order finishOrder(Long id) {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
-        if (existOrder.getStatus() == OrderStatus.DELIVERING) {
+        if (existOrder.getStatus() == OrderStatus.DELIVERED) {
             existOrder.setStatus(OrderStatus.FINISHED);
             for (OrderItem orderItem : existOrder.getOrderItems()) {
                 Product product = orderItem.getProduct();

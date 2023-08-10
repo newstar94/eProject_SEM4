@@ -6,16 +6,22 @@ import com.example.DecorEcommerceProject.Entities.Enum.*;
 import com.example.DecorEcommerceProject.Repositories.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.itextpdf.barcodes.BarcodeQRCode;
+import com.itextpdf.barcodes.qrcode.QRCodeWriter;
+import com.itextpdf.kernel.color.Color;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.border.Border;
 import com.itextpdf.layout.border.SolidBorder;
 import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
+import com.itextpdf.layout.property.VerticalAlignment;
 import lombok.Data;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -372,9 +378,7 @@ public class OrderServiceImpl implements IOrderService {
                     Paragraph codValue = new Paragraph();
                     if (existOrder.getPaymentType() == PaymentType.COD) {
                         Locale locale = new Locale("vi", "VN");
-                        // Get a number formatter for the specified locale
                         NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
-                        // Format the number using the number formatter
                         String formattedNumber = numberFormat.format(existOrder.getTotal());
                         codValue.add(formattedNumber).setBold().setFontSize(12);
                     } else {
@@ -388,8 +392,18 @@ public class OrderServiceImpl implements IOrderService {
                             .add(codValue);
                     buyerTable.addCell(buyerCell);
 
-                    Table infoTable = new Table((UnitValue.createPercentArray(new float[]{80, 20})));
+                    Table codeTable = new Table((UnitValue.createPercentArray(new float[]{50, 50})))
+                            .setBorder(Border.NO_BORDER);
+                    BarcodeQRCode qrCode = new BarcodeQRCode(existOrder.getCode());
+                    Image qrCodeImage = new Image(qrCode.createFormXObject(Color.BLACK, pdfDoc));
+                    qrCodeImage.setHeight(80)
+                            .setWidth(80)
+                            .setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                    codeTable.addCell(new Cell().add(existOrder.getCode()).setBold().setFontSize(14)
+                            .setVerticalAlignment(VerticalAlignment.MIDDLE).setBorder(Border.NO_BORDER));
+                    codeTable.addCell(new Cell().add(qrCodeImage).setBorder(Border.NO_BORDER));
 
+                    Table infoTable = new Table((UnitValue.createPercentArray(new float[]{80, 20})));
                     infoTable.addCell(new Cell().add("Nội dung đơn hàng")
                             .setTextAlignment(TextAlignment.CENTER));
                     int quantity = 0;
@@ -411,11 +425,18 @@ public class OrderServiceImpl implements IOrderService {
                     newCell.setHeight(remainingHeight);
                     infoTable.addCell(newCell);
 
+                    Paragraph sign = new Paragraph()
+                            .add("Ký tên xác nhận hàng nguyên vẹn").setFontSize(8).setTextAlignment(TextAlignment.RIGHT);
+
                     doc.add(sellerTable)
                             .add(spacingDiv)
                             .add(buyerTable)
                             .add(spacingDiv)
-                            .add(infoTable);
+                            .add(codeTable)
+                            .add(spacingDiv)
+                            .add(infoTable)
+                            .add(spacingDiv)
+                            .add(sign);
                     doc.close();
                 } catch (Exception e) {
                     e.printStackTrace();

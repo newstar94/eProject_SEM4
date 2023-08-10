@@ -58,8 +58,6 @@ public class SecurityConfig {
             //User
             "/api/users/login",
             "/api/users/add",
-            "/api/users/changePassword",
-            "/api/users/save/{id}",                 //updateUser
 
             //Discount
             "/api/discounts",
@@ -77,7 +75,6 @@ public class SecurityConfig {
             //Order
             "/api/order/user/{id}",                             //getAllOrderByUseId
             "/api/order/{id}",
-            "/api/order/delivering/{id}",
 
 
     };
@@ -87,6 +84,9 @@ public class SecurityConfig {
 //            "/api/products/add"
 //    };
     private static final String[] ALLOW_USER_URLS = {
+            //user
+            "/api/users/changePassword",
+            "/api/users/save/{id}",
 
             //DeliveryAddress
             "/api/delivery_address/add",                        //createDeliveryAddress
@@ -101,14 +101,13 @@ public class SecurityConfig {
             //Order
             "/api/order/place_order",
             "/api/order/checkout",
-            "/api/order/confirm/{id}",
             "/api/order/place_order/{id}",
-            "/api/order/result",
             "/api/order/cancel/{id}",
             "/api/order/finish/{id}",
     };
     private static final String[] ALLOW_ADMIN_USER_URLS = {
             "/api/users/{id}",
+            "/api/order/result",
     };
     private static final String[] ALLOW_ADMIN_URLS = {
             //Role
@@ -148,6 +147,8 @@ public class SecurityConfig {
             "/api/order/print/{id}",
             "/api/order/delivered/{id}",
             "/api/order/accept_return/{id}",
+            "/api/order/delivering/{id}",
+            "/api/order/confirm/{id}",
 
 
     };
@@ -162,8 +163,8 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.authorizeRequests().antMatchers(ALLOW_ALL_URLS).permitAll();
-        http.authorizeRequests().antMatchers(ALLOW_USER_URLS).hasRole("USER");
-        http.authorizeRequests().antMatchers(ALLOW_ADMIN_URLS).hasRole("ADMIN");
+        http.authorizeRequests().antMatchers(ALLOW_USER_URLS).hasAnyAuthority("USER");
+        http.authorizeRequests().antMatchers(ALLOW_ADMIN_URLS).hasAnyAuthority("ADMIN");
         http.authorizeRequests().antMatchers(ALLOW_ADMIN_USER_URLS).hasAnyAuthority("USER", "ADMIN"); // Cho phép cả USER và ADMIN truy cập
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

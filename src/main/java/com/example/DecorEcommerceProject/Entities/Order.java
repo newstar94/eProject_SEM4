@@ -45,6 +45,9 @@ public class Order {
     private DeliveryAddress deliveryAddress;
 
     @Column
+    private String code;
+
+    @Column
     private String ghnCode;
 
     @OneToMany(mappedBy = "order")

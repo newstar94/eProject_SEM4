@@ -11,6 +11,7 @@ public class AdminConfig {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String name;
     private String vnp_PayUrl;
     private String vnp_ReturnUrl;
     private String vnp_TmnCode;

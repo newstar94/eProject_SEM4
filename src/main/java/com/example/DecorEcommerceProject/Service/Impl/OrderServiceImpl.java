@@ -6,15 +6,16 @@ import com.example.DecorEcommerceProject.Entities.Enum.*;
 import com.example.DecorEcommerceProject.Repositories.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.itextpdf.io.font.FontConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.border.SolidBorder;
+import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.property.TextAlignment;
-import com.itextpdf.layout.property.VerticalAlignment;
+import com.itextpdf.layout.property.UnitValue;
 import lombok.Data;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -37,14 +38,17 @@ import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
 import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
 import com.example.DecorEcommerceProject.Service.IOrderService;
+
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.List;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
@@ -146,7 +150,7 @@ public class OrderServiceImpl implements IOrderService {
         if (orderDTO.getVoucherCode() != null && !orderDTO.getVoucherCode().isEmpty()) {
             if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), order.getUser().getUsername())) {
                 Voucher voucher = voucherRepository.findByCode(orderDTO.getVoucherCode());
-                voucher_discount = (int) Math.min(amount - (amount * voucher.getPercentage() / 100), voucher.getAmountMax());
+                voucher_discount = (int) Math.min((amount * voucher.getPercentage() / 100), voucher.getAmountMax());
                 order.setVoucher_discount(voucher_discount);
                 order.setVoucher(voucher);
                 voucher.setLimit(voucher.getLimit() - 1);
@@ -165,7 +169,22 @@ public class OrderServiceImpl implements IOrderService {
             orderItem.setOrder(order);
             orderItemRepository.save(orderItem);
         }
+        order.setCode(generateOrderCode(order.getId()));
+        order = orderRepository.save(order);
         return paymentService.createPayment(order.getId(), request);
+    }
+
+    private static String generateOrderCode(long id) {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder code = new StringBuilder();
+        Random random = new Random();
+        code.append(id);
+        code.append(characters.charAt(random.nextInt(characters.length())-10));
+        for (int i = 0; i < 8- String.valueOf(id).length(); i++) {
+            int index = random.nextInt(characters.length());
+            code.append(characters.charAt(index));
+        }
+        return code.toString();
     }
 
     @Override
@@ -225,7 +244,7 @@ public class OrderServiceImpl implements IOrderService {
         if (orderDTO.getVoucherCode() != null && !orderDTO.getVoucherCode().isEmpty()) {
             if (voucherService.checkVoucherAvailable(orderDTO.getVoucherCode(), order.getUser().getUsername())) {
                 Voucher voucher = voucherRepository.findByCode(orderDTO.getVoucherCode());
-                voucher_discount = (int) Math.min(amount - (amount * voucher.getPercentage() / 100), voucher.getAmountMax());
+                voucher_discount = (int) Math.min((amount * voucher.getPercentage() / 100), voucher.getAmountMax());
                 order.setVoucher_discount(voucher_discount);
             } else {
                 throw new ApplicationContextException("Voucher không hợp lệ hoặc đã hết lượt sử dụng!");
@@ -310,6 +329,7 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public String printOrder(Long id) throws Exception {
+        AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
         GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         List<String> order_codes = new ArrayList<>();
@@ -322,22 +342,80 @@ public class OrderServiceImpl implements IOrderService {
             } else {
                 String path = "D:\\" + existOrder.getId() + ".pdf";
                 try {
-                    PdfDocument pdfDoc = new PdfDocument(new PdfWriter(path));
+                    PdfWriter pdfWriter = new PdfWriter(path);
+                    PdfDocument pdfDoc = new PdfDocument(pdfWriter);
+                    pdfDoc.setDefaultPageSize(PageSize.A5);
                     Document doc = new Document(pdfDoc);
+                    PdfFont font = PdfFontFactory.createFont("c:/windows/fonts/arial.ttf", "Identity-H", true);
+                    doc.setFont(font);
+                    Div spacingDiv = new Div().setHeight(8f);
 
-                    // Tạo font sử dụng mã hóa UTF-8 (Unicode)
-                    PdfFont font = PdfFontFactory.createFont(FontConstants.TIMES_ROMAN, "UTF-8", true);
+                    Table sellerTable = new Table(UnitValue.createPercentArray(new float[]{1}));
+                    Paragraph nameParagraph = new Paragraph(adminConfig.getName()).setFontSize(12).setBold();
+                    Paragraph addressParagraph = new Paragraph(adminConfig.getAddress()).setFontSize(12).setBold();
+                    Cell sellerCell = new Cell()
+                            .add("Bên gửi").setFontSize(10)
+                            .add(nameParagraph)
+                            .add(addressParagraph);
+                    sellerTable.addCell(sellerCell);
 
-                    String vietnameseText = "Xin chào, iText 7 với tiếng Việt!";
+                    Table buyerTable = new Table(UnitValue.createPercentArray(new float[]{1}));
+                    DeliveryAddress deliveryAddress = existOrder.getDeliveryAddress();
+                    Paragraph buyerInfo = new Paragraph(deliveryAddress.getName() + " - "
+                            + deliveryAddress.getPhone())
+                            .setFontSize(12).setBold();
+                    Paragraph buyerAddress = new Paragraph(deliveryAddress.getAddress() + ", "
+                            + deliveryAddress.getWard() + ", "
+                            + deliveryAddress.getDistrict() + ", "
+                            + deliveryAddress.getProvince())
+                            .setFontSize(12).setBold();
+                    Paragraph codValue = new Paragraph();
+                    if (existOrder.getPaymentType() == PaymentType.COD) {
+                        Locale locale = new Locale("vi", "VN");
+                        // Get a number formatter for the specified locale
+                        NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
+                        // Format the number using the number formatter
+                        String formattedNumber = numberFormat.format(existOrder.getTotal());
+                        codValue.add(formattedNumber).setBold().setFontSize(12);
+                    } else {
+                        codValue.add("0").setBold().setFontSize(12);
+                    }
+                    Cell buyerCell = new Cell()
+                            .add("Bên nhận").setFontSize(10)
+                            .add(buyerInfo)
+                            .add(buyerAddress)
+                            .add("Thu tiền người nhận")
+                            .add(codValue);
+                    buyerTable.addCell(buyerCell);
 
-                    Paragraph paragraph = new Paragraph(vietnameseText)
-                            .setFont(font)
-                            .setFontSize(12)
-                            .setTextAlignment(TextAlignment.CENTER)
-                            .setVerticalAlignment(VerticalAlignment.MIDDLE);
+                    Table infoTable = new Table((UnitValue.createPercentArray(new float[]{80, 20})));
 
-                    doc.add(paragraph);
+                    infoTable.addCell(new Cell().add("Nội dung đơn hàng")
+                            .setTextAlignment(TextAlignment.CENTER));
+                    int quantity = 0;
+                    for (OrderItem orderItem : existOrder.getOrderItems()) {
+                        quantity += orderItem.getQuantity();
+                    }
+                    Paragraph quantityParagraph = new Paragraph()
+                            .add("SL tổng: ")
+                            .add(new Text(String.valueOf(quantity)).setBold());
+                    infoTable.addCell(new Cell().add(quantityParagraph));
+                    for (OrderItem orderItem : existOrder.getOrderItems()) {
+                        infoTable.addCell(new Cell().add(orderItem.getProduct().getName()));
+                        infoTable.addCell(new Cell().add(orderItem.getQuantity().toString())
+                                .setTextAlignment(TextAlignment.CENTER));
+                    }
 
+                    float remainingHeight = PageSize.A5.getHeight() - doc.getRenderer().getCurrentArea().getBBox().getHeight();
+                    Cell newCell = new Cell(0, 2).add("");
+                    newCell.setHeight(remainingHeight);
+                    infoTable.addCell(newCell);
+
+                    doc.add(sellerTable)
+                            .add(spacingDiv)
+                            .add(buyerTable)
+                            .add(spacingDiv)
+                            .add(infoTable);
                     doc.close();
                 } catch (Exception e) {
                     e.printStackTrace();

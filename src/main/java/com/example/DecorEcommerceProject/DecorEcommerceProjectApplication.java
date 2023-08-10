@@ -70,9 +70,10 @@ public class DecorEcommerceProjectApplication {
 
     private static AdminConfig initAdminConfig() {
         AdminConfig adminConfig = new AdminConfig();
+        adminConfig.setName("Decor Muse");
         adminConfig.setVnp_apiUrl("https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
         adminConfig.setVnp_PayUrl("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
-        adminConfig.setVnp_ReturnUrl("http://localhost:5173/order/payment");
+        adminConfig.setVnp_ReturnUrl("http://localhost:5173/payment");
         adminConfig.setVnp_TmnCode("NVWUQGML");
         adminConfig.setVnp_HashSecret("VJVDYZJTDGQAZGAJUQRZAVKMEZEECJJM");
         adminConfig.setDelivery_fee(40000);

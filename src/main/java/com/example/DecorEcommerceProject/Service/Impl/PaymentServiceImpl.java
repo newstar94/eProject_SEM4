@@ -42,7 +42,7 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public Object createPayment(Long id, HttpServletRequest request) throws Exception {
         Order order = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
-        if (order.getStatus()!=OrderStatus.WAITING){
+        if (order.getStatus() != OrderStatus.WAITING) {
             throw new Exception();
         }
         ResponseObject responseObject = new ResponseObject();
@@ -56,7 +56,7 @@ public class PaymentServiceImpl implements IPaymentService {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         long amount = order.getTotal() * 100L;
-        String vnp_TxnRef = String.valueOf(order.getId());
+        String vnp_TxnRef = String.valueOf(order.getCode());
         String vnp_TmnCode = adminConfig.getVnp_TmnCode();
         String vnp_IpAddr = request.getRemoteAddr();
 
@@ -133,7 +133,7 @@ public class PaymentServiceImpl implements IPaymentService {
         fields.put("vnp_TmnCode", URLEncoder.encode(vnp_TmnCode, StandardCharsets.US_ASCII.toString()));
         fields.put("vnp_Amount", URLEncoder.encode(vnp_Amount, StandardCharsets.US_ASCII.toString()));
         fields.put("vnp_BankCode", URLEncoder.encode(vnp_BankCode, StandardCharsets.US_ASCII.toString()));
-        if (!vnp_BankTranNo.isEmpty()){
+        if (!vnp_BankTranNo.isEmpty()) {
             fields.put("vnp_BankTranNo", URLEncoder.encode(vnp_BankTranNo, StandardCharsets.US_ASCII.toString()));
         }
         fields.put("vnp_CardType", URLEncoder.encode(vnp_CardType, StandardCharsets.US_ASCII.toString()));
@@ -146,7 +146,14 @@ public class PaymentServiceImpl implements IPaymentService {
 
         String signValue = PaymentConfig.hashAllFields(fields, adminConfigRepository.findFirstByOrderByIdAsc().getVnp_HashSecret());
         ResponseObject responseObject = new ResponseObject();
-        Order order = orderRepository.findById(Long.valueOf(vnp_TxnRef)).get();
+        long id = 0;
+        for (int i = 0; i < vnp_TxnRef.length(); i++) {
+            if (!Character.isDigit(vnp_TxnRef.charAt(i))) {
+                id = Long.parseLong(vnp_TxnRef.substring(0, i));
+                break;
+            }
+        }
+        Order order = orderRepository.findById(id).get();
         PaymentResultsDTO paymentResultsDTO = new PaymentResultsDTO();
         paymentResultsDTO.setAmount(vnp_Amount);
         paymentResultsDTO.setBankCode(vnp_BankCode);
@@ -187,7 +194,7 @@ public class PaymentServiceImpl implements IPaymentService {
         String vnp_Command = "refund";
         String vnp_TmnCode = adminConfig.getVnp_TmnCode();
         String vnp_TransactionType = "02"; // trả toàn bộ tiền
-        String vnp_TxnRef = String.valueOf(order.getId());
+        String vnp_TxnRef = String.valueOf(order.getCode());
         long amount = order.getTotal() * 100L;
         String vnp_Amount = String.valueOf(amount);
         String vnp_OrderInfo = "Hoan tien GD OrderId:" + vnp_TxnRef;

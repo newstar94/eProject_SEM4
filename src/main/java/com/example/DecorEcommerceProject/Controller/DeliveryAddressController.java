@@ -15,10 +15,10 @@ public class DeliveryAddressController {
         this.deliveryAddressService = deliveryAddressService;
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<?> createDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress) {
+    @PostMapping("/add/{userId}")
+    public ResponseEntity<?> createDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress,@PathVariable Long userId) {
         try {
-            return ResponseEntity.ok(deliveryAddressService.createDeliveryAddress(deliveryAddress));
+            return ResponseEntity.ok(deliveryAddressService.createDeliveryAddress(deliveryAddress,userId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Can not add delivery address");
         }

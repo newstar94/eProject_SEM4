@@ -266,7 +266,7 @@ public class OrderServiceImpl implements IOrderService {
 
     private void setDeliveryAddress(OrderDTO orderDTO, Order order) {
         if (orderDTO.getDeliveryAddress().getId() == null) {
-            DeliveryAddress deliveryAddress = deliveryAddressService.createDeliveryAddress(orderDTO.getDeliveryAddress());
+            DeliveryAddress deliveryAddress = deliveryAddressService.createDeliveryAddress(orderDTO.getDeliveryAddress(),orderDTO.getUser().getId());
             order.setDeliveryAddress(deliveryAddress);
         } else {
             order.setDeliveryAddress(deliveryAddressRepository.findById(orderDTO.getDeliveryAddress().getId()).get());
@@ -462,37 +462,7 @@ public class OrderServiceImpl implements IOrderService {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         if (existOrder.getDeliveryType() == DeliveryType.GHN) {
             if (existOrder.getStatus() == OrderStatus.PAID || existOrder.getStatus() == OrderStatus.CONFIRM) {
-                GhnDTO ghnDTO = new GhnDTO();
-                ghnDTO.setTo_name(existOrder.getDeliveryAddress().getName());
-                ghnDTO.setTo_phone(existOrder.getDeliveryAddress().getPhone());
-                ghnDTO.setTo_address(existOrder.getDeliveryAddress().getAddress());
-                ghnDTO.setTo_ward_code(existOrder.getDeliveryAddress().getWardCode());
-                ghnDTO.setTo_district_id(existOrder.getDeliveryAddress().getDistrict_id());
-                if (existOrder.getPaymentType() == PaymentType.ONLINE) {
-                    ghnDTO.setCod_amount(0);
-                } else {
-                    ghnDTO.setCod_amount(existOrder.getTotal());
-                }
-                ghnDTO.setInsurance_value((int) Math.min(existOrder.getAmount(), 5000000));
-                ghnDTO.setService_id(53320);
-                ghnDTO.setPayment_type_id(1); //1: người gửi trả phí; 2: người nhận trả phí
-                ghnDTO.setRequired_note("CHOXEMHANGKHONGTHU");
-                List<ItemGHN> items = new ArrayList<>();
-                int weight = 0;
-                for (OrderItem item : existOrder.getOrderItems()) {
-                    ItemGHN itemGHN = new ItemGHN();
-                    itemGHN.setName(item.getProduct().getName());
-                    itemGHN.setQuantity(item.getQuantity());
-                    items.add(itemGHN);
-                    weight += item.getProduct().getWeight();
-                }
-                ghnDTO.setWeight(weight + 200);
-                ghnDTO.setHeight(20);
-                ghnDTO.setLength(50);
-                ghnDTO.setWidth(30);
-                ghnDTO.setItems(items);
-                Gson gson = new Gson();
-                String jsonString = gson.toJson(ghnDTO);
+                String jsonString = getString(existOrder);
                 String ghnCode = ghnApiHandler.createGhn(jsonString);
                 if (!ghnCode.isEmpty()) {
                     existOrder.setGhnCode(ghnCode);
@@ -516,6 +486,41 @@ public class OrderServiceImpl implements IOrderService {
             return orderRepository.save(existOrder);
         }
         return null;
+    }
+
+    private static String getString(Order existOrder) {
+        GhnDTO ghnDTO = new GhnDTO();
+        ghnDTO.setTo_name(existOrder.getDeliveryAddress().getName());
+        ghnDTO.setTo_phone(existOrder.getDeliveryAddress().getPhone());
+        ghnDTO.setTo_address(existOrder.getDeliveryAddress().getAddress());
+        ghnDTO.setTo_ward_code(existOrder.getDeliveryAddress().getWardCode());
+        ghnDTO.setTo_district_id(existOrder.getDeliveryAddress().getDistrict_id());
+        if (existOrder.getPaymentType() == PaymentType.ONLINE) {
+            ghnDTO.setCod_amount(0);
+        } else {
+            ghnDTO.setCod_amount(existOrder.getTotal());
+        }
+        ghnDTO.setInsurance_value((int) Math.min(existOrder.getAmount(), 5000000));
+        ghnDTO.setService_id(53320);
+        ghnDTO.setPayment_type_id(1); //1: người gửi trả phí; 2: người nhận trả phí
+        ghnDTO.setRequired_note("CHOXEMHANGKHONGTHU");
+        List<ItemGHN> items = new ArrayList<>();
+        int weight = 0;
+        for (OrderItem item : existOrder.getOrderItems()) {
+            ItemGHN itemGHN = new ItemGHN();
+            itemGHN.setName(item.getProduct().getName());
+            itemGHN.setQuantity(item.getQuantity());
+            items.add(itemGHN);
+            weight += item.getProduct().getWeight();
+        }
+        ghnDTO.setWeight(weight + 200);
+        ghnDTO.setHeight(20);
+        ghnDTO.setLength(50);
+        ghnDTO.setWidth(30);
+        ghnDTO.setItems(items);
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(ghnDTO);
+        return jsonString;
     }
 
     @Override

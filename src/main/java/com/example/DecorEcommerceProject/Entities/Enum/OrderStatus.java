@@ -4,6 +4,7 @@ public enum OrderStatus {
     WAITING,
     CONFIRM,
     PAID,
+    PACKING,
     DELIVERING,
     DELIVERED,
     FINISHED,

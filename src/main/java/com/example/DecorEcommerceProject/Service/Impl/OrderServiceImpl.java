@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -185,8 +186,8 @@ public class OrderServiceImpl implements IOrderService {
         StringBuilder code = new StringBuilder();
         Random random = new Random();
         code.append(id);
-        code.append(characters.charAt(random.nextInt(characters.length())-10));
-        for (int i = 0; i < 8- String.valueOf(id).length(); i++) {
+        code.append(characters.charAt(random.nextInt(characters.length()) - 10));
+        for (int i = 0; i < 8 - String.valueOf(id).length(); i++) {
             int index = random.nextInt(characters.length());
             code.append(characters.charAt(index));
         }
@@ -266,7 +267,7 @@ public class OrderServiceImpl implements IOrderService {
 
     private void setDeliveryAddress(OrderDTO orderDTO, Order order) {
         if (orderDTO.getDeliveryAddress().getId() == null) {
-            DeliveryAddress deliveryAddress = deliveryAddressService.createDeliveryAddress(orderDTO.getDeliveryAddress(),orderDTO.getUser().getId());
+            DeliveryAddress deliveryAddress = deliveryAddressService.createDeliveryAddress(orderDTO.getDeliveryAddress(), orderDTO.getUser().getId());
             order.setDeliveryAddress(deliveryAddress);
         } else {
             order.setDeliveryAddress(deliveryAddressRepository.findById(orderDTO.getDeliveryAddress().getId()).get());
@@ -334,25 +335,35 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional
     public String printOrder(Long id) throws Exception {
         AdminConfig adminConfig = adminConfigRepository.findFirstByOrderByIdAsc();
         GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
         List<String> order_codes = new ArrayList<>();
-        if (existOrder.getStatus() == OrderStatus.DELIVERING) {
+        if (existOrder.getStatus() == OrderStatus.PAID || existOrder.getStatus() == OrderStatus.CONFIRM || existOrder.getStatus() == OrderStatus.PACKING) {
             if (existOrder.getDeliveryType() == DeliveryType.GHN) {
+                if (existOrder.getGhnCode() == null || existOrder.getGhnCode().isEmpty()) {
+                    String jsonStringToCreate = getString(existOrder);
+                    String ghnCode = ghnApiHandler.createGhn(jsonStringToCreate);
+                    existOrder.setGhnCode(ghnCode);
+                    existOrder.setStatus(OrderStatus.PACKING);
+                    orderRepository.save(existOrder);
+                }
                 order_codes.add(existOrder.getGhnCode());
                 Gson gson = new Gson();
-                String jsonString = gson.toJson(new print(order_codes));
-                return "https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=" + ghnApiHandler.printGhn(jsonString);
+                String jsonStringToPrint = gson.toJson(new print(order_codes));
+                return "https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=" + ghnApiHandler.printGhn(jsonStringToPrint);
             } else {
-                String path = "D:\\" + existOrder.getId() + ".pdf";
+                String outputPath = existOrder.getCode() + ".pdf";
+                String directoryPath = System.getProperty("user.dir");
+                String fullPath = Paths.get(directoryPath, outputPath).toString();
                 try {
-                    PdfWriter pdfWriter = new PdfWriter(path);
+                    PdfWriter pdfWriter = new PdfWriter(outputPath);
                     PdfDocument pdfDoc = new PdfDocument(pdfWriter);
                     pdfDoc.setDefaultPageSize(PageSize.A5);
                     Document doc = new Document(pdfDoc);
-                    PdfFont font = PdfFontFactory.createFont("c:/windows/fonts/arial.ttf", "Identity-H", true);
+                    PdfFont font = PdfFontFactory.createFont("arial.ttf", "Identity-H", true);
                     doc.setFont(font);
                     Div spacingDiv = new Div().setHeight(8f);
 
@@ -438,10 +449,12 @@ public class OrderServiceImpl implements IOrderService {
                             .add(spacingDiv)
                             .add(sign);
                     doc.close();
+                    existOrder.setStatus(OrderStatus.PACKING);
+                    orderRepository.save(existOrder);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                return path;
+                return fullPath;
             }
         }
         return null;
@@ -458,32 +471,26 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public Order deliveringOrder(Long id) throws Exception {
-        GhnApiHandler ghnApiHandler = new GhnApiHandler(adminConfigRepository);
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
-        if (existOrder.getDeliveryType() == DeliveryType.GHN) {
-            if (existOrder.getStatus() == OrderStatus.PAID || existOrder.getStatus() == OrderStatus.CONFIRM) {
-                String jsonString = getString(existOrder);
-                String ghnCode = ghnApiHandler.createGhn(jsonString);
-                if (!ghnCode.isEmpty()) {
-                    existOrder.setGhnCode(ghnCode);
-                    existOrder.setStatus(OrderStatus.DELIVERING);
-                    String to = existOrder.getUser().getEmail();
-                    String subject = "Đơn hàng của bạn đang được vận chuyển";
-                    String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
-                            "<p>Đơn hàng " + existOrder.getId() + " của bạn đang được vận chuyển</p>" +
-                            "<p>Mã đơn hàng GHN: " + existOrder.getGhnCode() + " </p>";
-                    emailService.sendEmail(to, subject, content);
-                    return orderRepository.save(existOrder);
-                }
+        if (existOrder.getStatus() == OrderStatus.PACKING) {
+            if (existOrder.getDeliveryType() == DeliveryType.GHN) {
+                existOrder.setStatus(OrderStatus.DELIVERING);
+                String to = existOrder.getUser().getEmail();
+                String subject = "Đơn hàng của bạn đang được vận chuyển";
+                String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
+                        "<p>Đơn hàng " + existOrder.getCode() + " của bạn đang được vận chuyển</p>" +
+                        "<p>Mã đơn hàng GHN: " + existOrder.getGhnCode() + " </p>";
+                emailService.sendEmail(to, subject, content);
+                return orderRepository.save(existOrder);
+            } else {
+                existOrder.setStatus(OrderStatus.DELIVERING);
+                String to = existOrder.getUser().getEmail();
+                String subject = "Đơn hàng của bạn đang được vận chuyển";
+                String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
+                        "<p>Đơn hàng " + existOrder.getCode() + " của bạn đang được vận chuyển</p>";
+                emailService.sendEmail(to, subject, content);
+                return orderRepository.save(existOrder);
             }
-        } else {
-            existOrder.setStatus(OrderStatus.DELIVERING);
-            String to = existOrder.getUser().getEmail();
-            String subject = "Đơn hàng của bạn đang được vận chuyển";
-            String content = "<h2>Xin chào " + existOrder.getUser().getName() + "</h2>" +
-                    "<p>Đơn hàng " + existOrder.getId() + " của bạn đang được vận chuyển</p>";
-            emailService.sendEmail(to, subject, content);
-            return orderRepository.save(existOrder);
         }
         return null;
     }
@@ -519,8 +526,7 @@ public class OrderServiceImpl implements IOrderService {
         ghnDTO.setWidth(30);
         ghnDTO.setItems(items);
         Gson gson = new Gson();
-        String jsonString = gson.toJson(ghnDTO);
-        return jsonString;
+        return gson.toJson(ghnDTO);
     }
 
     @Override

@@ -1,13 +1,16 @@
 package com.example.DecorEcommerceProject.Service.Impl;
 
+import com.example.DecorEcommerceProject.Entities.*;
 import com.example.DecorEcommerceProject.Entities.DTO.GhnDTO;
 import com.example.DecorEcommerceProject.Entities.DTO.ItemGHN;
+import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
+import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
 import com.example.DecorEcommerceProject.Entities.Enum.*;
 import com.example.DecorEcommerceProject.Repositories.*;
+import com.example.DecorEcommerceProject.Service.IOrderService;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.itextpdf.barcodes.BarcodeQRCode;
-import com.itextpdf.barcodes.qrcode.QRCodeWriter;
 import com.itextpdf.kernel.color.Color;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
@@ -16,7 +19,6 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.border.Border;
-import com.itextpdf.layout.border.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.TextAlignment;
@@ -40,11 +42,6 @@ import org.cloudinary.json.JSONObject;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import com.example.DecorEcommerceProject.Entities.*;
-import com.example.DecorEcommerceProject.Entities.DTO.OrderDTO;
-import com.example.DecorEcommerceProject.Entities.DTO.OrderItemDTO;
-import com.example.DecorEcommerceProject.Service.IOrderService;
-
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
@@ -54,8 +51,8 @@ import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
@@ -347,9 +344,9 @@ public class OrderServiceImpl implements IOrderService {
                     String jsonStringToCreate = getString(existOrder);
                     String ghnCode = ghnApiHandler.createGhn(jsonStringToCreate);
                     existOrder.setGhnCode(ghnCode);
-                    existOrder.setStatus(OrderStatus.PACKING);
-                    orderRepository.save(existOrder);
                 }
+                existOrder.setStatus(OrderStatus.PACKING);
+                orderRepository.save(existOrder);
                 order_codes.add(existOrder.getGhnCode());
                 Gson gson = new Gson();
                 String jsonStringToPrint = gson.toJson(new print(order_codes));
@@ -532,7 +529,7 @@ public class OrderServiceImpl implements IOrderService {
     @Override
     public Order deliveredOrder(Long id) {
         Order existOrder = orderRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found order with id: " + id));
-        if (existOrder.getStatus() == OrderStatus.DELIVERING) {
+        if (existOrder.getStatus() == OrderStatus.DELIVERING && existOrder.getDeliveryType() == DeliveryType.SHOP) {
             existOrder.setStatus(OrderStatus.DELIVERED);
             existOrder.setReceivedAt(LocalDateTime.now());
             return orderRepository.save(existOrder);

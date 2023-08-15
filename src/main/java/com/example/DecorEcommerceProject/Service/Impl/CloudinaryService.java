@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
@@ -28,6 +29,17 @@ public class CloudinaryService {
             return uploadResult.get("secure_url").toString();
         } catch (IOException e) {
             throw new RuntimeException("Failed to save product image to Cloudinary", e);
+        }
+    }
+    public String saveOrderToCloudinary(File imageFile) {
+        try {
+            // Upload image to Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(imageFile, ObjectUtils.emptyMap());
+
+            // Retrieve the image URL from the upload result
+            return uploadResult.get("secure_url").toString();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save to Cloudinary", e);
         }
     }
     public void deleteProductImageFromCloudinary(String imageUrl) {

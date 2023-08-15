@@ -37,14 +37,22 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.cloudinary.json.JSONArray;
 import org.cloudinary.json.JSONObject;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.ImageIO;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
@@ -56,6 +64,7 @@ import java.util.*;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
+    private final CloudinaryService cloudinary;
     private final EmailServiceImpl emailService;
     private final AdminConfigRepository adminConfigRepository;
     private final VoucherRepository voucherRepository;
@@ -70,7 +79,8 @@ public class OrderServiceImpl implements IOrderService {
     private final DeliveryAddressServiceImpl deliveryAddressService;
     private final DeliveryAddressRepository deliveryAddressRepository;
 
-    public OrderServiceImpl(EmailServiceImpl emailService, AdminConfigRepository adminConfigRepository, VoucherRepository voucherRepository, VoucherUserRepository voucherUserRepository, ProductRepository productRepository, DiscountRepository discountRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, PaymentServiceImpl paymentService, UserRepository userRepository, VoucherServiceImpl voucherService, DeliveryAddressServiceImpl deliveryAddressService, DeliveryAddressRepository deliveryAddressRepository) {
+    public OrderServiceImpl(CloudinaryService cloudinary, EmailServiceImpl emailService, AdminConfigRepository adminConfigRepository, VoucherRepository voucherRepository, VoucherUserRepository voucherUserRepository, ProductRepository productRepository, DiscountRepository discountRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, PaymentServiceImpl paymentService, UserRepository userRepository, VoucherServiceImpl voucherService, DeliveryAddressServiceImpl deliveryAddressService, DeliveryAddressRepository deliveryAddressRepository) {
+        this.cloudinary = cloudinary;
         this.emailService = emailService;
         this.adminConfigRepository = adminConfigRepository;
         this.voucherRepository = voucherRepository;
@@ -352,9 +362,8 @@ public class OrderServiceImpl implements IOrderService {
                 String jsonStringToPrint = gson.toJson(new print(order_codes));
                 return "https://dev-online-gateway.ghn.vn/a5/public-api/printA5?token=" + ghnApiHandler.printGhn(jsonStringToPrint);
             } else {
-                String outputPath = existOrder.getCode() + ".pdf";
-                String directoryPath = System.getProperty("user.dir");
-                String fullPath = Paths.get(directoryPath, outputPath).toString();
+                String outputPath = "order.pdf";
+                String orderUrl = "";
                 try {
                     PdfWriter pdfWriter = new PdfWriter(outputPath);
                     PdfDocument pdfDoc = new PdfDocument(pdfWriter);
@@ -451,7 +460,25 @@ public class OrderServiceImpl implements IOrderService {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                return fullPath;
+
+                try {
+                    PDDocument document = PDDocument.load(new File(outputPath));
+                    PDFRenderer pdfRenderer = new PDFRenderer(document);
+
+                    String imageFileName = null;
+                    for (int page = 0; page < document.getNumberOfPages(); page++) {
+                        BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+                        imageFileName = "order.jpg";
+                        ImageIO.write(bim, "jpg", new File(imageFileName));
+                    }
+                    document.close();
+                    assert imageFileName != null;
+                    File imageFile = new File(imageFileName);
+                    orderUrl = cloudinary.saveOrderToCloudinary(imageFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return orderUrl;
             }
         }
         return null;
